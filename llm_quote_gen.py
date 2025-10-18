@@ -37,7 +37,7 @@ def _call_model(prompt: str, max_retries: int = 3, sleep: float = 0.8) -> str:
                 return ""
             time.sleep(sleep)
 
-# ----- Quote generation -----
+# ----- Quote generation ---ii---  -----
 def _build_prompt(min_words=10, max_words=25, include_author=False):
     author_clause = " Optionally include a single short author name in parentheses at the end." if include_author else ""
     prompt = (
