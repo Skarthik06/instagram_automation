@@ -1,8 +1,8 @@
 # utils/config.py
 import json
 import os
+from collections.abc import Mapping
 
-# Path to a user-editable config.json in project root
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 CONFIG_FILE = os.path.join(ROOT, "config.json")
 
@@ -15,7 +15,7 @@ DEFAULTS = {
         "include_author": False
     },
     "overlay": {
-        "font_path": "",  # if empty, fallback to system fonts / PIL default
+        "font_path": "",
         "font_size": 46,
         "max_width_pct": 0.85,
         "padding": 40,
@@ -23,32 +23,36 @@ DEFAULTS = {
         "text_color": "#ffffff",
         "box_opacity": 0.48,
         "box_padding": 20,
-        "position": "center"  # "center", "bottom", or "top"
+        "position": "center"
     },
     "hashtags": {
         "fixed": ["motivation", "dailyinspiration", "positivity", "mindset"],
         "max_dynamic": 6
     },
-    # Optional: if you can serve files from a simple static host, set base URL here.
-    # Example: "https://example.com/static/" so {base}{filename} must be valid url to the file.
-    "hosted_image_base_url": ""
+    "hosted_image_base_url": "https://skarthik06.github.io/instagram_automation/images/"
 }
+
+def deep_merge(default: dict, override: dict) -> dict:
+    """
+    Recursively merge two dictionaries. Values from `override` take priority.
+    """
+    merged = default.copy()
+    for k, v in override.items():
+        if k in merged and isinstance(merged[k], dict) and isinstance(v, Mapping):
+            merged[k] = deep_merge(merged[k], v)
+        else:
+            merged[k] = v
+    return merged
 
 def load_config():
     cfg = DEFAULTS.copy()
-    try:
-        if os.path.exists(CONFIG_FILE):
+    if os.path.exists(CONFIG_FILE):
+        try:
             with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-                user = json.load(f)
-            # shallow merge for our simple structure
-            for k, v in user.items():
-                if isinstance(v, dict) and k in cfg:
-                    cfg[k].update(v)
-                else:
-                    cfg[k] = v
-    except Exception:
-        # on any parse/read error, silently keep defaults
-        pass
+                user_cfg = json.load(f)
+            cfg = deep_merge(cfg, user_cfg)
+        except Exception as e:
+            print(f"⚠️ Failed to load config.json: {e}. Using defaults.")
     return cfg
 
 config = load_config()

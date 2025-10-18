@@ -4,6 +4,7 @@ import os
 
 DB_FILE = os.path.join(os.path.dirname(__file__), "..", "posts.db")
 
+
 def init_db():
     os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
     conn = sqlite3.connect(DB_FILE)
@@ -19,6 +20,7 @@ def init_db():
     conn.commit()
     conn.close()
 
+
 def get_all_quotes():
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
@@ -26,6 +28,7 @@ def get_all_quotes():
     rows = cur.fetchall()
     conn.close()
     return [r[0] for r in rows]
+
 
 def save_post(quote, image_url):
     conn = sqlite3.connect(DB_FILE)

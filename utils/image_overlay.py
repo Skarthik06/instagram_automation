@@ -1,115 +1,106 @@
 # utils/image_overlay.py
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageStat, ImageFilter
 import textwrap
 import os
 from utils.config import config
 
+INSTAGRAM_SQUARE = (1080, 1080)
 
 def _get_font(font_path, font_size):
-    """Try to load custom font, fallback to PIL default."""
+    # Prefer Times New Roman if available
     try:
         if font_path and os.path.exists(font_path):
             return ImageFont.truetype(font_path, font_size)
-    except Exception:
-        pass
-    try:
-        return ImageFont.truetype("DejaVuSans.ttf", font_size)
-    except Exception:
+        # Try Times New Roman or similar serif
+        for name in ["Times New Roman.ttf", "times.ttf", "Times.ttf"]:
+            try:
+                return ImageFont.truetype(name, font_size)
+            except:
+                continue
+        # fallback
+        return ImageFont.truetype("DejaVuSerif-Bold.ttf", font_size)
+    except:
         return ImageFont.load_default()
 
-
-def overlay_quote_on_image(image: Image.Image, quote: str, out_width: int = None) -> Image.Image:
-    """
-    Draws the quote text over the image using a semi-transparent background box.
-    Returns a new Image object (RGB).
-    """
-    cfg = config.get("overlay", {})
-    font_path = cfg.get("font_path", "")
-    font_size = cfg.get("font_size", 46)
-    max_width_pct = cfg.get("max_width_pct", 0.85)
-    padding = cfg.get("padding", 40)
-    box_opacity = cfg.get("box_opacity", 0.48)
-    box_padding = cfg.get("box_padding", 20)
-    line_spacing = cfg.get("line_spacing", 6)
-    text_color = cfg.get("text_color", "#ffffff")
-    position = cfg.get("position", "center")
-
-    img = image.convert("RGB")
+def _resize_for_instagram(image):
+    img = image.copy().convert("RGB")
+    img.thumbnail(INSTAGRAM_SQUARE, Image.LANCZOS)
+    new_img = Image.new("RGB", INSTAGRAM_SQUARE, (0, 0, 0))
     w, h = img.size
-    if out_width and out_width != w:
-        new_h = int(h * (out_width / w))
-        img = img.resize((out_width, new_h), Image.LANCZOS)
-        w, h = img.size
+    new_img.paste(img, ((INSTAGRAM_SQUARE[0] - w)//2, (INSTAGRAM_SQUARE[1] - h)//2))
+    return new_img
 
+def _is_dark(image):
+    stat = ImageStat.Stat(image)
+    brightness = sum(stat.mean[:3]) / 3
+    return brightness < 130
+
+def _apply_soft_overlay(image, darkness=0.3):
+    """Adds a subtle dark transparent layer to make text more readable."""
+    overlay = Image.new("RGB", image.size, (0, 0, 0))
+    return Image.blend(image, overlay, darkness)
+
+def overlay_quote_on_image(image, quote):
+    cfg = config.get("overlay", {})
+    base_font_size = cfg.get("font_size", 52)
+    padding = cfg.get("padding", 40)
+    text_color = cfg.get("text_color", "#ffffff")
+
+    # Step 1: resize & soften background
+    img = _resize_for_instagram(image)
+    img = _apply_soft_overlay(img, 0.25)
+    w, h = img.size
     draw = ImageDraw.Draw(img)
-    font = _get_font(font_path, font_size)
 
-    # Compute text wrapping
-    max_text_width = int(w * max_width_pct)
-    avg_char_width = font.getbbox("x")[2] if hasattr(font, "getbbox") else font.getsize("x")[0]
-    if avg_char_width <= 0:
-        avg_char_width = font_size * 0.5
-    approx_chars_per_line = max(20, int(max_text_width / avg_char_width))
-    wrapped = textwrap.fill(quote, width=approx_chars_per_line)
-    lines = wrapped.splitlines()
+    # Step 2: dynamically adjust font size
+    font = _get_font(cfg.get("font_path", ""), base_font_size)
+    max_width = int(w * 0.8)
+    max_height = int(h * 0.65)
+    wrapped = textwrap.fill(quote, width=40)
 
-    # Measure text block
-    line_heights = []
-    max_line_w = 0
-    for line in lines:
-        bbox = draw.textbbox((0, 0), line, font=font) if hasattr(draw, "textbbox") else None
-        if bbox:
-            lw = bbox[2] - bbox[0]
-            lh = bbox[3] - bbox[1]
-        else:
-            lw, lh = draw.textsize(line, font=font)
-        line_heights.append(lh)
-        max_line_w = max(max_line_w, lw)
+    while True:
+        bbox = draw.multiline_textbbox((0, 0), wrapped, font=font, spacing=10)
+        text_w, text_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        if text_w <= max_width and text_h <= max_height:
+            break
+        base_font_size -= 2
+        if base_font_size < 32:
+            break
+        font = _get_font(cfg.get("font_path", ""), base_font_size)
+        wrapped = textwrap.fill(quote, width=int(40 * 52 / base_font_size))
 
-    text_block_h = sum(line_heights) + (len(lines) - 1) * line_spacing
-    text_block_w = max_line_w
+    # Step 3: position text slightly above center (visually pleasing)
+    text_x = (w - text_w) / 2
+    text_y = (h - text_h) / 2.5  # slightly higher than center
 
-    box_w = text_block_w + box_padding * 2
-    box_h = text_block_h + box_padding * 2
+    # Step 4: text shadow (for better visibility)
+    shadow_offset = 3
+    shadow_color = "black" if _is_dark(img) else "white"
+    for dx in (-shadow_offset, shadow_offset):
+        for dy in (-shadow_offset, shadow_offset):
+            draw.multiline_text(
+                (text_x + dx, text_y + dy),
+                wrapped,
+                font=font,
+                fill=shadow_color,
+                spacing=10,
+                align="center",
+            )
 
-    # Box position
-    if position == "center":
-        box_x = (w - box_w) // 2
-        box_y = (h - box_h) // 2
-    elif position == "bottom":
-        box_x = (w - box_w) // 2
-        box_y = h - box_h - padding
-    elif position == "top":
-        box_x = (w - box_w) // 2
-        box_y = padding
-    else:
-        box_x = (w - box_w) // 2
-        box_y = (h - box_h) // 2
-
-    # Semi-transparent box
-    overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
-    ovdraw = ImageDraw.Draw(overlay)
-    box_color = (0, 0, 0, int(255 * box_opacity))
-    ovdraw.rounded_rectangle(
-        [box_x, box_y, box_x + box_w, box_y + box_h],
-        radius=16,
-        fill=box_color,
+    # Step 5: main text
+    text_color = "#ffffff" if _is_dark(img) else "#000000"
+    draw.multiline_text(
+        (text_x, text_y),
+        wrapped,
+        font=font,
+        fill=text_color,
+        spacing=10,
+        align="center"
     )
-    img = Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
-
-    # Draw text
-    draw = ImageDraw.Draw(img)
-    text_x = box_x + box_padding
-    text_y = box_y + box_padding
-    for idx, line in enumerate(lines):
-        draw.text((text_x, text_y), line, font=font, fill=text_color)
-        text_y += line_heights[idx] + line_spacing
 
     return img
 
-
-def save_image_with_quote(img: Image.Image, quote: str, out_path: str):
-    """Convenience function to overlay quote and save image."""
+def save_image_with_quote(img, quote, out_path):
     final_img = overlay_quote_on_image(img, quote)
-    final_img.save(out_path, format="JPEG", quality=92)
+    final_img.save(out_path, format="JPEG", quality=95)
     return out_path
