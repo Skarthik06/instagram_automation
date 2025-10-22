@@ -187,7 +187,7 @@ def post_to_instagram(image_url: Optional[str] = None, caption: str = "", local_
         return False
 
 # If you run this file directly, simple smoke test
-if __name__ == "__main__":
-    test_quote = "Small steps repeated every day create remarkable change."
-    cap = build_caption(test_quote)
-    print("Caption:\n", cap)
+# if __name__ == "__main__":
+#     test_quote = "Small steps repeated every day create remarkable change."
+#     cap = build_caption(test_quote)
+#     print("Caption:\n", cap)
