@@ -110,5 +110,7 @@ def overlay_quote_on_image(image, quote):
 
 def save_image_with_quote(img, quote, out_path):
     final_img = overlay_quote_on_image(img, quote)
-    final_img.save(out_path, format="JPEG", quality=95)
+    final_img.save(out_path, format="JPEG", qualisty=95)
     return out_path
+  #hiii
+  
