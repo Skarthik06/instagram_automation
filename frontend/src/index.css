@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+.gradient-instagram {
+  background: linear-gradient(45deg, #C13584, #E1306C, #F56040, #FCAF45);
+}

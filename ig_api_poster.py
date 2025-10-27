@@ -12,6 +12,32 @@ ACCESS_TOKEN = os.getenv("IG_ACCESS_TOKEN")
 INSTAGRAM_ID = os.getenv("INSTAGRAM_BUSINESS_ID")
 GRAPH_VERSION = "v24.0"
 
+
+def _looks_like_placeholder(token: str) -> bool:
+    """
+    Heuristic check for obvious placeholder/missing tokens.
+    Returns True when the token is empty, too short, or contains common placeholder markers.
+    This is intentionally conservative and only meant to catch obvious misconfigurations.
+    """
+    if not token:
+        return True
+    t = token.strip()
+    if not t:
+        return True
+    low = t.lower()
+    # common placeholder markers seen in examples or redacted values
+    placeholders = ["token_here", "your_", "replace", "<", ">", "xxx"]
+    for p in placeholders:
+        if p in low:
+            return True
+    # heuristic: real Graph API tokens are usually fairly long; catch obviously short values
+    try:
+        if len(t) < 80:
+            return True
+    except Exception:
+        return True
+    return False
+
 # a small emoji map to decorate captions; we'll pick a few based on keywords
 _EMOJI_MAP = {
     "success": "🏆",
@@ -149,8 +175,16 @@ def post_to_instagram(image_url: Optional[str] = None, caption: str = "", local_
     If local_image_path is supplied, the function will convert it to a raw.githubusercontent link.
     Returns True on success.
     """
-    if not ACCESS_TOKEN or not INSTAGRAM_ID:
-        print("❌ IG_ACCESS_TOKEN or INSTAGRAM_BUSINESS_ID not set.")
+    # Quick validation for common misconfiguration (missing or placeholder token)
+    if _looks_like_placeholder(ACCESS_TOKEN):
+        print("❌ IG_ACCESS_TOKEN appears to be unset or a placeholder.\n   Please set a valid Instagram/Facebook Page access token in your `.env` (IG_ACCESS_TOKEN) and restart.")
+        return False
+    if not INSTAGRAM_ID:
+        print("❌ INSTAGRAM_BUSINESS_ID not set. Please set INSTAGRAM_BUSINESS_ID in your `.env`.")
+        return False
+    # INSTAGRAM_ID should be numeric
+    if not str(INSTAGRAM_ID).isdigit():
+        print(f"❌ INSTAGRAM_BUSINESS_ID looks invalid: {INSTAGRAM_ID}. It should be a numeric Instagram Business Account ID.")
         return False
     if local_image_path and not image_url:
         image_url = _save_local_and_get_hosted_url(local_image_path)
