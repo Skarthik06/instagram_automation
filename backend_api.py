@@ -56,12 +56,12 @@ def home():
     }
 
 @app.post("/api/generate-previews")
-def generate_previews():
+async def generate_previews():
     global current_previews
     try:
-        result = run_coro_in_thread(main.api_generate_previews())
+        result = await main.api_generate_previews()
         current_previews = result
-        
+
         return {
             "success": True,
             "quote": result["quote"],
@@ -73,7 +73,10 @@ def generate_previews():
             "message": "Previews generated! Use /api/post-image with image_index to post."
         }
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/current-previews")
 def get_current_previews():

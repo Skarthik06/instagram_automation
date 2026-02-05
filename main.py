@@ -77,7 +77,7 @@ async def api_generate_previews():
     existing_quotes = get_all_quotes()
 
     # 1. Generate unique quote
-    quote = generate_unique_quote(existing_quotes, min_words=10, max_words=25)
+    quote = generate_unique_quote(existing_quotes,min_words=6, max_words=20)
     print(f"\n✨ Generated Quote:\n{quote}\n")
 
     # 2. Build caption
