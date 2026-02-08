@@ -1,7 +1,7 @@
 # llm_quote_gen.py
 import os
-import random
 import time
+import random
 import re
 from dotenv import load_dotenv
 from utils.db import get_all_quotes
@@ -16,190 +16,149 @@ except Exception:
 load_dotenv()
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
-if GEMINI_KEY:
-    if genai is None:
-        raise RuntimeError("google.generativeai not installed or failed to import.")
-
+if GEMINI_KEY and genai:
     genai.configure(api_key=GEMINI_KEY)
 
+    # ✅ FIXED: correct & supported model name
     MODEL = genai.GenerativeModel(
-        model_name="gemini-2.5-flash",
+        model_name="models/gemini-2.5-flash",
         generation_config={
             "temperature": 0.7,
             "top_p": 0.9,
             "top_k": 40,
-            "max_output_tokens": 120,
+            "max_output_tokens": 300,
         },
     )
 else:
     MODEL = None
 
 
-# ===================== Internal LLM Call =====================
+# ===================== Internal Gemini Call =====================
 
-def _call_model(prompt: str, max_retries: int = 3, sleep: float = 0.8) -> str:
+def _call_model(prompt: str, retries: int = 3, sleep: float = 1.2) -> str:
     if MODEL is None:
         return ""
 
-    for attempt in range(max_retries):
+    for attempt in range(1, retries + 1):
         try:
             resp = MODEL.generate_content(prompt)
-
             text = (resp.text or "").strip()
             if text:
                 return text
-
-            # fallback to candidates if text is empty
-            if hasattr(resp, "candidates") and resp.candidates:
-                joined = " ".join(
-                    c.text for c in resp.candidates if getattr(c, "text", None)
-                ).strip()
-                if joined:
-                    return joined
-
-        except Exception:
-            pass
-
-        time.sleep(sleep)
+        except Exception as e:
+            print(f"⚠️ Gemini error (attempt {attempt}): {e}")
+            time.sleep(sleep)
 
     return ""
 
 
-# ===================== Quote Prompt =====================
+# ===================== ONE-CALL POST GENERATOR =====================
 
-def _build_prompt(min_words: int, max_words: int) -> str:
-    return (
-        "Write ONE original motivational sentence about growth, discipline, or progress. "
-        f"The sentence must be between {min_words} and {max_words} words. "
-        "Use natural human language. "
-        "Do not include emojis, hashtags, quotes, or explanations. "
-        "Output only the sentence."
-    )
-
-
-# ===================== Quote Generator (DB-Backed Uniqueness) =====================
-
-def generate_unique_quote(
-    existing_quotes: set,
-    min_words: int = 8,
+def generate_post_bundle(
+    min_words: int = 6,
     max_words: int = 20,
-    max_attempts: int = 12,
-) -> str:
+    max_attempts: int = 3,
+):
+    """
+    ONE Gemini call → quote + caption + hashtags + image prompt
+    """
 
-    # Merge DB quotes + runtime quotes
-    db_quotes = set(get_all_quotes())
-    used_quotes = set(existing_quotes) | db_quotes
+    used_quotes = set(get_all_quotes())
+
+    prompt = (
+        "Generate content for ONE Instagram motivational post.\n\n"
+        "Rules:\n"
+        f"- Quote must be {min_words} to {max_words} words\n"
+        "- Quote must be original and not famous\n"
+        "- Quote must NOT contain emojis or hashtags\n"
+        "- Caption may include 1–2 emojis\n"
+        "- Hashtags must be lowercase and space-separated\n"
+        "- Image prompt must be under 8 words\n\n"
+        "Return EXACTLY in this format:\n"
+        "QUOTE: <text>\n"
+        "CAPTION: <text>\n"
+        "HASHTAGS: <hashtags>\n"
+        "IMAGE: <image description>\n"
+    )
 
     for _ in range(max_attempts):
-        prompt = _build_prompt(min_words, max_words)
-        text = _call_model(prompt)
+        raw = _call_model(prompt)
+        if not raw:
+            continue
 
-        quote = " ".join(text.strip().strip('"').split()) if text else ""
-        wc = len(quote.split())
+        data = {}
+        for line in raw.splitlines():
+            if ":" in line:
+                k, v = line.split(":", 1)
+                data[k.strip().upper()] = v.strip()
 
+        quote = data.get("QUOTE", "")
+        caption = data.get("CAPTION", "")
+        hashtags = data.get("HASHTAGS", "")
+        image_prompt = data.get("IMAGE", "")
+
+        # ---- Validation ----
         if not quote:
             continue
-
-        if not (min_words <= wc <= max_words):
-            continue
-
         if quote in used_quotes:
             continue
+        if not (min_words <= len(quote.split()) <= max_words):
+            continue
 
-        # ✅ UNIQUE & VALID
-        return quote
+        if not caption:
+            caption = f"{quote} ✨"
 
-    # 🚨 TRUE fallback (only if Gemini fully fails)
-    return "Progress grows when small actions are repeated consistently."
+        if not hashtags:
+            hashtags = "#motivation #growth #mindset"
 
-# ===================== Pinterest Image Prompt =====================
+        if not image_prompt or len(image_prompt.split()) < 2:
+            image_prompt = "abstract aesthetic background"
 
-def create_image_prompt(quote: str) -> str:
-    prompt = (
-        f"Analyze this motivational quote: \"{quote}\". "
-        "Describe ONE Pinterest-style background image in under 8 words. "
-        "Use nature, gradients, abstract textures, or minimal aesthetics. "
-        "No text, people, or logos."
-    )
+        return {
+            "quote": quote,
+            "caption": caption,
+            "hashtags": hashtags,
+            "image_prompt": image_prompt,
+        }
 
-    text = _call_model(prompt)
-    result = text.splitlines()[0].strip() if text else ""
-
-    if not result or len(result.split()) < 2:
-        return random.choice(
-            [
-                "abstract pastel gradient background",
-                "sunrise sky landscape nature",
-                "misty forest morning aesthetic",
-                "serene ocean horizon minimal",
-                "golden sunset over mountains",
-                "soft light abstract texture",
-            ]
-        )
-
-    return result
-
-
-# ===================== Caption Generator =====================
-
-def generate_caption(quote: str, max_words: int = 30) -> str:
-    prompt = (
-        f"Create a short Instagram caption for this quote: \"{quote}\". "
-        f"Maximum {max_words} words. "
-        "Emotionally engaging, include 1–2 emojis, no hashtags. "
-        "Optional subtle call-to-action."
-    )
-
-    text = _call_model(prompt)
-    caption = " ".join(text.strip().split()) if text else ""
-
-    return caption if caption else f"{quote} ✨"
-
-
-# ===================== Hashtag Generator =====================
-
-def generate_hashtags(quote: str, max_tags: int = 6) -> list:
-    prompt = (
-        f"Generate {max_tags} Instagram hashtags for this quote: \"{quote}\". "
-        "Focus on motivation, growth, mindset, inspiration. "
-        "Lowercase, space separated, no emojis or numbers."
-    )
-
-    text = _call_model(prompt)
-    tags = re.findall(r"#\w+", text.lower()) if text else []
-
-    if tags:
-        return tags[:max_tags]
-
-    # fallback: extract keywords from quote
-    words = re.findall(r"[a-zA-Z]+", quote.lower())
-    STOPWORDS = {
-        "the", "a", "an", "and", "or", "to", "of", "in", "for", "on",
-        "with", "is", "are", "be", "at", "as", "that", "this", "it",
+    # 🚨 Absolute fallback (NO Gemini dependency)
+    return {
+        "quote": "Small consistent actions create powerful long term change",
+        "caption": "Small steps today build strong results tomorrow ✨",
+        "hashtags": "#motivation #growth #consistency #mindset",
+        "image_prompt": "soft gradient abstract background",
     }
 
-    freq = {}
-    for w in words:
-        if len(w) <= 3 or w in STOPWORDS:
-            continue
-        freq[w] = freq.get(w, 0) + 1
 
-    sorted_words = sorted(freq.items(), key=lambda t: (-t[1], -len(t[0])))
-    hashtags = [f"#{w}" for w, _ in sorted_words[:max_tags]]
+# ===================== Compatibility Helpers =====================
+# (So your existing main.py does not break)
 
-    defaults = ["#motivation", "#growth", "#mindset"]
-    for d in defaults:
-        if len(hashtags) < max_tags and d not in hashtags:
-            hashtags.append(d)
+def generate_unique_quote(existing_quotes=None, min_words=6, max_words=20):
+    bundle = generate_post_bundle(min_words, max_words)
+    return bundle["quote"]
 
-    return hashtags[:max_tags]
+
+def create_image_prompt(quote: str):
+    bundle = generate_post_bundle()
+    return bundle["image_prompt"]
+
+
+def generate_caption(quote: str, max_words: int = 30):
+    bundle = generate_post_bundle()
+    return bundle["caption"]
+
+
+def generate_hashtags(quote: str, max_tags: int = 6):
+    bundle = generate_post_bundle()
+    tags = bundle["hashtags"].split()
+    return tags[:max_tags]
 
 
 # ===================== Test Harness =====================
 
 if __name__ == "__main__":
-    q = generate_unique_quote()
-    print("\nQUOTE:\n", q)
-    print("\nIMAGE PROMPT:\n", create_image_prompt(q))
-    print("\nCAPTION:\n", generate_caption(q))
-    print("\nHASHTAGS:\n", generate_hashtags(q))
+    post = generate_post_bundle()
+    print("\nQUOTE:\n", post["quote"])
+    print("\nCAPTION:\n", post["caption"])
+    print("\nHASHTAGS:\n", post["hashtags"])
+    print("\nIMAGE PROMPT:\n", post["image_prompt"])

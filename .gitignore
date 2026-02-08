@@ -3,3 +3,4 @@ venv/
 .DS_Store
 .env
 frontend/node_modules/
+posts.db
