@@ -1,0 +1,33 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+build/
+dist/
+
+# --- Secrets & local data (NEVER commit to this PUBLIC repo) ---
+# .env holds the OpenAI key; posts.db holds IG access tokens;
+# .ragskey is the encryption key for those tokens. None may ever be committed.
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite
+*.sqlite3
+.ragskey
+
+# --- Node / frontend ---
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# --- Logs & temp ---
+*.log
+boot.log
+
+# --- OS ---
+.DS_Store
+Thumbs.db

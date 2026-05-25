@@ -1,0 +1,17 @@
+{
+  "quote": {
+    "min_words": 6,
+    "max_words": 16,
+    "dedupe_history": 24
+  },
+  "hashtags": {
+    "max_dynamic": 12,
+    "fixed": ["motivation", "dailyinspiration", "positivity", "mindset"]
+  },
+  "overlay": {
+    "handle": "sparkle06.exe",
+    "position": "center",
+    "darkness": 0.42,
+    "text_color": "#ffffff"
+  }
+}

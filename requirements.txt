@@ -1,0 +1,31 @@
+# Instagram Automation - production dependencies (lean)
+# Install into a virtual environment:
+#   python -m venv venv
+#   venv\Scripts\activate          (Windows)
+#   source venv/bin/activate       (macOS/Linux)
+#   pip install -r requirements.txt
+#   playwright install chromium
+
+# --- API server ---
+fastapi==0.128.1
+uvicorn==0.40.0
+pydantic==2.12.2
+
+# --- LLM (OpenAI gpt-4o-mini) ---
+openai==2.38.0
+
+# --- Content sourcing ---
+feedparser==6.0.12
+requests==2.32.5
+playwright==1.58.0
+
+# --- Image rendering & filtering ---
+pillow==12.1.0
+opencv-python==4.12.0.88
+numpy            # unpinned: let the resolver match opencv's supported range
+pytesseract==0.3.13
+emoji==2.15.0
+
+# --- Config & security ---
+python-dotenv==1.2.1
+cryptography==48.0.0          # encrypts IG tokens at rest in the rags store
