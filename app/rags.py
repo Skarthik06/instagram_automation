@@ -36,6 +36,7 @@ def _account_public(row: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "id": row["id"],
         "label": row["label"],
+        "handle": (row["handle"] if "handle" in row.keys() else "") or "",
         "niche": row["niche"],
         "ig_business_id": row["ig_business_id"] or "",
         "ig_access_token_masked": _mask(crypto.decrypt(row["ig_access_token"])),
@@ -74,16 +75,22 @@ def get_account(account_id: int, *, with_secret: bool = False) -> Optional[Dict[
     return _account_public(dict(row))
 
 
+def _clean_handle(handle: str) -> str:
+    """Normalise an IG handle: drop a leading @ and surrounding whitespace."""
+    return (handle or "").strip().lstrip("@").strip()
+
+
 def add_account(
-    *, label: str, niche: str, ig_business_id: str, ig_access_token: str, is_active: bool = True
+    *, label: str, niche: str, ig_business_id: str, ig_access_token: str,
+    handle: str = "", is_active: bool = True,
 ) -> Dict[str, Any]:
     niche = niche if niche in VALID_NICHES else "quotes"
     with connect() as conn:
         cur = conn.cursor()
         cur.execute(
-            """INSERT INTO accounts (label, niche, ig_business_id, ig_access_token, is_active)
-               VALUES (?, ?, ?, ?, ?)""",
-            (label.strip(), niche, ig_business_id.strip(),
+            """INSERT INTO accounts (label, handle, niche, ig_business_id, ig_access_token, is_active)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (label.strip(), _clean_handle(handle), niche, ig_business_id.strip(),
              crypto.encrypt(ig_access_token.strip()), int(is_active)),
         )
         new_id = int(cur.lastrowid)
@@ -91,7 +98,7 @@ def add_account(
 
 
 def update_account(account_id: int, **fields: Any) -> Optional[Dict[str, Any]]:
-    allowed = {"label", "niche", "ig_business_id", "ig_access_token", "is_active"}
+    allowed = {"label", "handle", "niche", "ig_business_id", "ig_access_token", "is_active"}
     sets, params = [], []
     for key, value in fields.items():
         if key not in allowed or value is None:
@@ -106,6 +113,8 @@ def update_account(account_id: int, **fields: Any) -> Optional[Dict[str, Any]]:
         sets.append(f"{key} = ?")
         if key == "ig_access_token":
             params.append(crypto.encrypt(str(value).strip()))
+        elif key == "handle":
+            params.append(_clean_handle(str(value)))
         else:
             params.append(value.strip() if isinstance(value, str) else value)
     if not sets:
@@ -114,6 +123,21 @@ def update_account(account_id: int, **fields: Any) -> Optional[Dict[str, Any]]:
     with connect() as conn:
         conn.execute(f"UPDATE accounts SET {', '.join(sets)} WHERE id = ?", params)
     return get_account(account_id)
+
+
+def handle_for_niche(niche: str) -> Optional[str]:
+    """The IG @handle to overlay on a niche's slides.
+
+    Resolves to the handle of the first active account serving this niche
+    (so news slides show the news page, quotes the quotes page). Falls back
+    to that account's label, then to None — in which case the renderer uses
+    the config.json / DEFAULT_HANDLE value.
+    """
+    accounts = list_accounts(niche=niche, active_only=True) or list_accounts(niche=niche)
+    if not accounts:
+        return None
+    acct = accounts[0]
+    return _clean_handle(acct.get("handle", "")) or _clean_handle(acct.get("label", "")) or None
 
 
 def delete_account(account_id: int) -> bool:

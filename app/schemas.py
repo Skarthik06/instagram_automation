@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 # ---- Accounts (rags) -----------------------------------------------------
 class AccountIn(BaseModel):
     label: str = Field(..., min_length=1, max_length=80)
+    handle: str = ""               # IG @username shown in the slide overlay
     niche: str = "quotes"          # quotes | news | both
     ig_business_id: str = ""
     ig_access_token: str = ""
@@ -17,6 +18,7 @@ class AccountIn(BaseModel):
 
 class AccountUpdate(BaseModel):
     label: Optional[str] = None
+    handle: Optional[str] = None
     niche: Optional[str] = None
     ig_business_id: Optional[str] = None
     ig_access_token: Optional[str] = None

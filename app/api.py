@@ -66,7 +66,7 @@ def list_accounts(niche: str | None = None, active_only: bool = False):
 @app.post("/api/accounts")
 def create_account(body: AccountIn):
     return rags.add_account(
-        label=body.label, niche=body.niche,
+        label=body.label, handle=body.handle, niche=body.niche,
         ig_business_id=body.ig_business_id, ig_access_token=body.ig_access_token,
         is_active=body.is_active,
     )

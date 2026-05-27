@@ -114,6 +114,9 @@ async def generate(
     batch_id = uuid.uuid4().hex
     out_dir = settings.PREVIEWS_DIR
     fixed_tags = _fixed_hashtags()
+    # Overlay handle reflects the account that owns this niche (news page vs
+    # quotes page), not a single hardcoded default.
+    overlay_handle = rags.handle_for_niche(niche)
     seen_in_batch: set = set()
 
     built_posts: List[Dict[str, Any]] = []
@@ -158,7 +161,7 @@ async def generate(
 
         slide_paths = render.render_post_slides(
             post=post, niche=niche, out_dir=out_dir, post_id=f"{batch_id[:8]}_{i}",
-            background_urls=background_urls, palette_idx=i,
+            background_urls=background_urls, handle=overlay_handle, palette_idx=i,
         )
         caption_full = _compose_caption(post, niche, fixed_tags)
 

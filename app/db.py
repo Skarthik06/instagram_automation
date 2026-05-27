@@ -35,6 +35,7 @@ def init_db() -> None:
             CREATE TABLE IF NOT EXISTS accounts (
                 id              INTEGER PRIMARY KEY AUTOINCREMENT,
                 label           TEXT NOT NULL,
+                handle          TEXT DEFAULT '',
                 niche           TEXT NOT NULL DEFAULT 'quotes',
                 ig_business_id  TEXT,
                 ig_access_token TEXT,
@@ -43,6 +44,11 @@ def init_db() -> None:
             )
             """
         )
+        # Migration: add `handle` (IG @username for the slide overlay) to
+        # account tables created before this column existed.
+        cols = {r[1] for r in cur.execute("PRAGMA table_info(accounts)").fetchall()}
+        if "handle" not in cols:
+            cur.execute("ALTER TABLE accounts ADD COLUMN handle TEXT DEFAULT ''")
         cur.execute(
             """
             CREATE TABLE IF NOT EXISTS app_settings (

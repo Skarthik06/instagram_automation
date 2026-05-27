@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Field, Icon, Spinner, cx } from './ui';
 
-const BLANK = { label: '', niche: 'quotes', ig_business_id: '', ig_access_token: '', is_active: true };
+const BLANK = { label: '', handle: '', niche: 'quotes', ig_business_id: '', ig_access_token: '', is_active: true };
 
 function AccountForm({ initial, onSave, onCancel, saving }) {
   const [f, setF] = useState(initial || BLANK);
@@ -17,6 +17,9 @@ function AccountForm({ initial, onSave, onCancel, saving }) {
       </div>
       <div className="grid md:grid-cols-2 gap-4">
         <Field label="Label"><input className="input" value={f.label} onChange={set('label')} placeholder="e.g. Daily Quotes" /></Field>
+        <Field label="Handle (@username)" hint="Shown as the overlay on this account's slides">
+          <input className="input font-mono" value={f.handle || ''} onChange={set('handle')} placeholder="sparkle06.exe" />
+        </Field>
         <Field label="Niche">
           <select className="select" value={f.niche} onChange={set('niche')}>
             <option value="quotes">Quotes</option>
@@ -125,6 +128,7 @@ export default function Settings({ accounts, settings, reload, notify }) {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-semibold truncate">{a.label}</span>
+                {a.handle && <span className="chip font-mono">@{a.handle}</span>}
                 <span className="chip">{a.niche}</span>
                 {!a.is_active && <span className="chip" style={{ color: 'var(--danger)' }}>disabled</span>}
               </div>
