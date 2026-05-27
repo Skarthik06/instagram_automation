@@ -41,6 +41,55 @@ def _run(args: List[str]) -> None:
     subprocess.run(args, cwd=str(settings.BASE_DIR), check=True, capture_output=True, text=True)
 
 
+def _run_quiet(args: List[str]) -> bool:
+    """Run a git command, swallowing failures. Returns True on success."""
+    try:
+        _run(args)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
+def _push_with_reconcile(branch: str) -> None:
+    """Push to origin; if the remote moved ahead (another copy/session pushed),
+    fetch + rebase our commit on top and retry once.
+
+    Each publish stages uniquely-named slide files, so a rebase can't conflict.
+    If it somehow does, we abort the rebase and surface the original error
+    rather than leaving the repo mid-rebase.
+    """
+    if _run_quiet(["git", "push", "origin", branch]):
+        return
+    _run(["git", "fetch", "origin", branch])
+    try:
+        _run(["git", "rebase", f"origin/{branch}"])
+    except subprocess.CalledProcessError:
+        _run_quiet(["git", "rebase", "--abort"])
+        raise
+    _run(["git", "push", "origin", branch])
+
+
+def sync() -> bool:
+    """Best-effort pull of remote commits so multiple machines stay in step.
+
+    Called before generation so a laptop that's been idle catches up on what
+    the other one published, leaving the eventual publish-push with little or
+    nothing to reconcile. Never fatal: if offline / no upstream / a rebase
+    would conflict, it cleanly aborts and returns False so generation still
+    proceeds. `--autostash` keeps any local tracked edits safe; untracked
+    preview files are left untouched.
+    """
+    _, _, branch = _git_cfg()
+    if not _run_quiet(["git", "fetch", "origin", branch]):
+        return False
+    try:
+        _run(["git", "rebase", "--autostash", f"origin/{branch}"])
+        return True
+    except subprocess.CalledProcessError:
+        _run_quiet(["git", "rebase", "--abort"])
+        return False
+
+
 def publish_images(paths: List[str], commit_msg: str = "Add carousel slides") -> List[str]:
     """Stage, commit and push the given image files; return their raw URLs."""
     if not paths:
@@ -50,7 +99,7 @@ def publish_images(paths: List[str], commit_msg: str = "Add carousel slides") ->
         for p in paths:
             _run(["git", "add", p])
         _run(["git", "commit", "-m", commit_msg, "--allow-empty"])
-        _run(["git", "push", "origin", branch])
+        _push_with_reconcile(branch)
     except subprocess.CalledProcessError as exc:
         detail = (exc.stderr or exc.stdout or str(exc)).strip()
         raise RuntimeError(f"Git hosting push failed: {detail}") from exc

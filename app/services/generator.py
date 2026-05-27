@@ -84,6 +84,13 @@ async def generate(
     posts = posts or rags.get_int_setting("posts_per_batch", settings.DEFAULT_POSTS_PER_BATCH, 1, settings.MAX_POSTS_PER_BATCH)
     slides = slides or rags.get_int_setting("slides_per_post", settings.DEFAULT_SLIDES_PER_POST, 1, settings.MAX_SLIDES_PER_POST)
 
+    # Multi-machine: catch up on what another laptop published before we start,
+    # so the eventual publish-push has little/nothing to reconcile. Best-effort.
+    try:
+        hosting.sync()
+    except Exception as exc:
+        print(f"[generator] repo sync skipped: {exc}")
+
     news_items: List[Dict[str, str]] = []
     if niche == "news":
         news_items = news.fetch_news(topic=topic, limit=max(posts * 2, posts))
