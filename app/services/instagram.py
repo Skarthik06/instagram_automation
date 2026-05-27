@@ -59,6 +59,31 @@ def _post(url: str, data: Dict, timeout: int = 30) -> Dict:
     return body
 
 
+def fetch_username(account: Dict) -> Optional[str]:
+    """Look up the real IG @username for an account via the Graph API.
+
+    `GET /{ig-business-id}?fields=username` returns the handle tied to the
+    business account, so the slide overlay can use the genuine username
+    instead of a manually-typed value. Returns None on any error so callers
+    can fall back gracefully (never raises).
+    """
+    ig_id = str(account.get("ig_business_id") or "")
+    token = account.get("ig_access_token") or ""
+    if not ig_id.isdigit() or _looks_like_placeholder(token):
+        return None
+    try:
+        r = requests.get(
+            f"{GRAPH}/{ig_id}",
+            params={"fields": "username", "access_token": token},
+            timeout=15,
+        )
+        data = r.json()
+        username = data.get("username") if isinstance(data, dict) else None
+        return str(username).strip() if username else None
+    except Exception:
+        return None
+
+
 def _permalink(media_id: str, token: str) -> Optional[str]:
     try:
         r = requests.get(

@@ -31,6 +31,36 @@ def _fixed_hashtags() -> List[str]:
     return [t for t in items if t]
 
 
+def _overlay_handle(niche: str) -> Optional[str]:
+    """Resolve the @handle to overlay on a niche's slides.
+
+    Order: a handle already stored on the niche's account → otherwise fetch the
+    real IG @username from the Graph API once and cache it onto the account →
+    otherwise the account label. Falls back to None (config default) if there
+    is no account for the niche at all.
+    """
+    accounts = rags.list_accounts(niche=niche, active_only=True) or rags.list_accounts(niche=niche)
+    if not accounts:
+        return None
+    acct = accounts[0]
+    if acct.get("handle"):
+        return acct["handle"]
+
+    # No handle yet — discover the genuine username from Instagram and store it,
+    # so future generations reuse it and the UI shows it (one API call, cached).
+    full = rags.get_account(acct["id"], with_secret=True)
+    if full:
+        try:
+            username = instagram.fetch_username(full)
+        except Exception as exc:
+            username = None
+            print(f"[generator] IG username lookup failed: {exc}")
+        if username:
+            rags.update_account(acct["id"], handle=username)
+            return username
+    return acct.get("label") or None
+
+
 def _compose_caption(post: Dict[str, Any], niche: str, fixed_tags: List[str]) -> str:
     """Final caption: lead quote (quotes only) + body + LLM hashtags + fixed hashtags."""
     tags, seen = [], set()
@@ -115,8 +145,9 @@ async def generate(
     out_dir = settings.PREVIEWS_DIR
     fixed_tags = _fixed_hashtags()
     # Overlay handle reflects the account that owns this niche (news page vs
-    # quotes page), not a single hardcoded default.
-    overlay_handle = rags.handle_for_niche(niche)
+    # quotes page): a stored handle, else the real IG username auto-fetched
+    # from the Graph API and cached, else the label.
+    overlay_handle = _overlay_handle(niche)
     seen_in_batch: set = set()
 
     built_posts: List[Dict[str, Any]] = []
