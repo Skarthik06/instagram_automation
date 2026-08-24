@@ -31,6 +31,7 @@ class SettingsIn(BaseModel):
     github_username: Optional[str] = None
     github_repo: Optional[str] = None
     github_branch: Optional[str] = None
+    github_token: Optional[str] = None   # PAT (contents:write); blank = keep existing
     posts_per_batch: Optional[int] = Field(None, ge=1, le=6)
     slides_per_post: Optional[int] = Field(None, ge=1, le=6)
     fixed_hashtags: Optional[str] = None

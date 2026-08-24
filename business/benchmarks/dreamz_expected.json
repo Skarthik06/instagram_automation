@@ -1,0 +1,93 @@
+{
+  "_note": "BENCHMARK ORACLE (Spec §29/§30) — the expected extraction from 'DREAMZ (1).pdf'. This is a TEST TARGET for evaluating the extraction pipeline, NOT application configuration. Values were pulled from the real file (4 pages); the app must DISCOVER them, never hard-code them. 'source.page' is 1-indexed to the PDF.",
+  "property": {
+    "id": "landmark-dreamz",
+    "project_name": "Landmark Dreamz",
+    "property_type": "apartment",
+    "category": "budget",
+    "status": "new",
+    "builder": "Landmark Homes",
+    "developer": "Landmark Homes"
+  },
+  "location": {
+    "address": "#95, Abbigere-Lakshmipura Main Road, Singapura, Vidyaranyapura Post, Bangalore",
+    "city": "Bengaluru",
+    "locality": "Vidyaranyapura Post, Singapura",
+    "pincode": "560097",
+    "landmark": "Overlooking Singapura Park; near Jalahalli",
+    "latitude": null,
+    "longitude": null
+  },
+  "configuration": [
+    {
+      "bhk": "2 BHK",
+      "label": "Large 2BHK",
+      "area_sqft": 940,
+      "bedrooms": 2,
+      "bathrooms": null,
+      "balcony": 1,
+      "rooms": [
+        { "name": "Balcony", "dimensions": "6'x5'.6" },
+        { "name": "Living", "dimensions": "11'x12'.3" },
+        { "name": "Dining", "dimensions": "9'.6x10'.0" },
+        { "name": "Master Bed", "dimensions": "10'x12'.0" },
+        { "name": "2nd Bed", "dimensions": "11'x10'.0" }
+      ]
+    }
+  ],
+  "pricing": {
+    "price": "NOT_AVAILABLE",
+    "price_min": null,
+    "price_max": null,
+    "price_per_sqft": null,
+    "currency": "INR",
+    "_note": "No price stated in the brochure. Easy Loan support is mentioned; RERA number is NOT_AVAILABLE. The pipeline MUST NOT invent a price."
+  },
+  "project": {
+    "land_area": "1.25 acres",
+    "total_units": 128,
+    "floors": null,
+    "blocks": null
+  },
+  "amenities": [
+    "Kids Play Area", "Badminton Court", "No footwear zone",
+    "Jogging and strolling track with benches", "24x7 Security with CCTV",
+    "100% generator power backup for common areas and lift", "1KVA power backup per unit",
+    "Borewell water", "Rain water harvesting", "Solid waste management",
+    "Covered car parking", "Visitor parking", "Exclusive elevator for each block"
+  ],
+  "connectivity": [
+    { "name": "RMZ Mall", "distance": "6.1 Km", "distance_kind": "SOURCE_DOCUMENT_DISTANCE", "category": "mall", "source": { "document": "DREAMZ (1).pdf", "page": 2 } },
+    { "name": "Mall of Asia", "distance": "6.3 Km", "distance_kind": "SOURCE_DOCUMENT_DISTANCE", "category": "mall", "source": { "document": "DREAMZ (1).pdf", "page": 2 } },
+    { "name": "NPS Vidyaranyapura", "distance": "1 Km", "distance_kind": "SOURCE_DOCUMENT_DISTANCE", "category": "school", "source": { "document": "DREAMZ (1).pdf", "page": 2 } },
+    { "name": "Jalahalli Metro Station", "distance": "6 Km", "distance_kind": "SOURCE_DOCUMENT_DISTANCE", "category": "transit", "source": { "document": "DREAMZ (1).pdf", "page": 2 } },
+    { "name": "Euro Kids Singapura", "distance": "500 Mts", "distance_kind": "SOURCE_DOCUMENT_DISTANCE", "category": "school", "source": { "document": "DREAMZ (1).pdf", "page": 2 } },
+    { "name": "Avekshya Hospital", "distance": "700 Mts", "distance_kind": "SOURCE_DOCUMENT_DISTANCE", "category": "hospital", "source": { "document": "DREAMZ (1).pdf", "page": 2 } }
+  ],
+  "approvals": ["Zero-violation project", "100% BBMP Plan Sanctioned"],
+  "features": ["Well-ventilated, naturally lit apartments", "Smart layouts", "Modern design", "Premium fittings", "Strong security", "Easy Loan support"],
+  "views": ["Lake view", "Park view", "Balcony views", "Amenities view"],
+  "floor_plans": [
+    { "asset_type": "floor_plan", "page": 4, "bbox": [212, 48, 585, 332], "resolution": "373x284", "usable": true, "confidence": 0.9, "source": { "document": "DREAMZ (1).pdf", "page": 4, "method": "vision" } }
+  ],
+  "media": [
+    { "asset_type": "building_exterior", "page": 1, "bbox": [-1, 0, 354, 292], "source": { "document": "DREAMZ (1).pdf", "page": 1, "method": "vision" } },
+    { "asset_type": "builder_logo", "page": 1, "bbox": [394, 25, 554, 188], "source": { "document": "DREAMZ (1).pdf", "page": 1, "method": "vision" } },
+    { "asset_type": "location_map", "page": 2, "bbox": [327, 526, 590, 708], "source": { "document": "DREAMZ (1).pdf", "page": 2, "method": "vision" } },
+    { "asset_type": "cluster_plan", "page": 3, "bbox": [299, 262, 582, 621], "source": { "document": "DREAMZ (1).pdf", "page": 3, "method": "vision" } }
+  ],
+  "contacts": [
+    { "name": "R K", "phone": "9148525511", "role": "sales", "source": { "document": "DREAMZ (1).pdf", "page": 4 } },
+    { "name": "Monty", "phone": "9945429636", "role": "sales", "source": { "document": "DREAMZ (1).pdf", "page": 4 } },
+    { "name": "Jacob", "phone": "6360866726", "role": "sales", "source": { "document": "DREAMZ (1).pdf", "page": 4 } }
+  ],
+  "source_documents": ["DREAMZ (1).pdf"],
+  "claims": [
+    { "field": "project.total_units", "value": 128, "confidence": 0.99, "source": { "document": "DREAMZ (1).pdf", "page": 1, "text": "128 architect-designed apartments", "method": "digital_text" } },
+    { "field": "project.land_area", "value": "1.25 acres", "confidence": 0.98, "source": { "document": "DREAMZ (1).pdf", "page": 1, "text": "spread across 1.25 acres", "method": "digital_text" } },
+    { "field": "configuration.0.area_sqft", "value": 940, "confidence": 0.97, "source": { "document": "DREAMZ (1).pdf", "page": 3, "text": "Large 2BHK 940 Sqft", "method": "digital_text" } },
+    { "field": "approvals", "value": "100% BBMP Plan Sanctioned", "confidence": 0.95, "source": { "document": "DREAMZ (1).pdf", "page": 2, "text": "100% BBMP Plan Sanctioned", "method": "digital_text" } }
+  ],
+  "conflicts": [],
+  "confidence": { "property.project_name": 0.99, "project.total_units": 0.99, "configuration.0.area_sqft": 0.97, "pricing.price": 0.0 }
+}

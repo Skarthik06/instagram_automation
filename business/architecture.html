@@ -1,0 +1,423 @@
+<title>Property Intelligence Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --paper:#F7F6F3; --surface:#FFFFFF; --surface-2:#F1EFEA;
+    --ink:#191E1C; --muted:#5B625E; --faint:#8A918C;
+    --accent:#0E7C66; --accent-deep:#0B5F4E; --accent-soft:#DCEEE7;
+    --warn:#A9761B; --warn-soft:#F7ECD6; --danger:#AF4128; --danger-soft:#F6E2DB;
+    --ok:#0E7C66; --ok-soft:#DCEEE7;
+    --line:#E4E1DA; --line-strong:#CFCBC1;
+    --shadow:0 1px 2px rgba(20,30,26,.04),0 8px 24px rgba(20,30,26,.06);
+    --radius:14px;
+    --display:'Archivo',system-ui,sans-serif;
+    --body:'Newsreader',Georgia,serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --paper:#0E1413; --surface:#151D1B; --surface-2:#1B2523;
+      --ink:#E9EEEB; --muted:#98A29D; --faint:#6E7A75;
+      --accent:#41BE93; --accent-deep:#6FD3AF; --accent-soft:#12312A;
+      --warn:#E0A54A; --warn-soft:#33280F; --danger:#E27A60; --danger-soft:#361B14;
+      --ok:#41BE93; --ok-soft:#12312A;
+      --line:#26312E; --line-strong:#35423E;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0E1413; --surface:#151D1B; --surface-2:#1B2523;
+    --ink:#E9EEEB; --muted:#98A29D; --faint:#6E7A75;
+    --accent:#41BE93; --accent-deep:#6FD3AF; --accent-soft:#12312A;
+    --warn:#E0A54A; --warn-soft:#33280F; --danger:#E27A60; --danger-soft:#361B14;
+    --ok:#41BE93; --ok-soft:#12312A;
+    --line:#26312E; --line-strong:#35423E;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
+    font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  a{color:var(--accent-deep);text-underline-offset:3px;text-decoration-thickness:1px}
+  h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.12;margin:0}
+  .mono{font-family:var(--mono)}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-deep)}
+
+  /* hero */
+  header.hero{border-bottom:1px solid var(--line);background:
+     radial-gradient(120% 100% at 100% 0%, var(--accent-soft) 0%, transparent 55%);}
+  .hero-in{padding:64px 0 48px;display:grid;gap:22px}
+  .kicker{font-family:var(--mono);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent-deep)}
+  h1{font-size:clamp(2.3rem,5vw,3.6rem);font-weight:800;letter-spacing:-.02em}
+  .lede{font-size:clamp(1.1rem,2.2vw,1.4rem);color:var(--muted);max-width:64ch;font-weight:400}
+  .metastrip{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+  .chip{font-family:var(--mono);font-size:.72rem;letter-spacing:.02em;padding:6px 11px;border-radius:999px;
+    border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);display:inline-flex;gap:7px;align-items:center}
+  .chip b{color:var(--ink);font-weight:600}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+
+  /* layout with sticky index */
+  .grid{display:grid;grid-template-columns:210px 1fr;gap:48px;padding:48px 0 80px;align-items:start}
+  nav.toc{position:sticky;top:20px;display:grid;gap:2px;font-family:var(--mono);font-size:.74rem}
+  nav.toc a{display:flex;gap:9px;padding:5px 8px;border-radius:8px;color:var(--muted);text-decoration:none;align-items:baseline}
+  nav.toc a:hover{background:var(--surface-2);color:var(--ink)}
+  nav.toc a .l{color:var(--accent-deep);font-weight:600;width:14px;flex:none}
+  nav.toc .grp{margin-top:12px;color:var(--faint);font-size:.66rem;letter-spacing:.14em;padding:0 8px}
+
+  section{scroll-margin-top:20px;padding:26px 0;border-top:1px solid var(--line)}
+  section:first-child{border-top:none;padding-top:0}
+  .sec-head{display:flex;gap:14px;align-items:baseline;margin-bottom:14px}
+  .sec-letter{font-family:var(--mono);font-weight:600;color:var(--accent-deep);font-size:.9rem;
+    border:1px solid var(--line-strong);border-radius:8px;padding:2px 8px;background:var(--surface)}
+  h2{font-size:1.5rem;font-weight:700;letter-spacing:-.01em}
+  h3{font-size:1.02rem;font-weight:700;margin:18px 0 6px}
+  p{margin:10px 0;max-width:72ch}
+  ul{margin:10px 0;padding-left:20px}li{margin:5px 0;max-width:70ch}
+  strong{font-weight:600}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+  .cards{display:grid;gap:14px}
+  @media(min-width:720px){.cards.two{grid-template-columns:1fr 1fr}.cards.three{grid-template-columns:1fr 1fr 1fr}}
+  .card h3{margin-top:0}
+  .why{display:grid;gap:6px;margin-top:8px}
+  .why div{display:grid;grid-template-columns:88px 1fr;gap:10px;font-size:.92rem}
+  .why span{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding-top:3px}
+
+  .badge{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;padding:3px 8px;border-radius:6px;white-space:nowrap;font-weight:500}
+  .b-ok{background:var(--ok-soft);color:var(--accent-deep)}
+  .b-warn{background:var(--warn-soft);color:var(--warn)}
+  .b-danger{background:var(--danger-soft);color:var(--danger)}
+
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);margin:14px 0;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);position:sticky;top:0}
+  tr:last-child td{border-bottom:none}
+  td.mono,th.mono{font-family:var(--mono)}
+  .num{font-variant-numeric:tabular-nums}
+
+  .callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:12px 16px;border-radius:0 10px 10px 0;margin:14px 0;font-size:.94rem}
+  .callout.warn{border-color:var(--warn);background:var(--warn-soft)}
+  .callout.warn b{color:var(--warn)}
+  .callout .t{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:3px;color:var(--accent-deep)}
+  .callout.warn .t{color:var(--warn)}
+
+  pre{margin:12px 0;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;
+    font-family:var(--mono);font-size:.8rem;line-height:1.55;color:var(--ink)}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface-2);padding:1px 5px;border-radius:5px}
+  pre code{background:none;padding:0}
+
+  /* pipeline diagram */
+  .diagram{width:100%;height:auto;display:block;margin:8px 0}
+  .stage-lane{display:grid;gap:10px;grid-template-columns:repeat(4,1fr);margin:14px 0}
+  @media(max-width:720px){.stage-lane{grid-template-columns:1fr 1fr}}
+  .lane{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface)}
+  .lane .h{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-deep);margin-bottom:6px}
+  .lane ul{margin:0;padding-left:16px;font-size:.82rem}.lane li{margin:2px 0}
+
+  footer{border-top:1px solid var(--line);padding:34px 0 60px;color:var(--muted);font-size:.9rem}
+  .next{background:var(--accent-soft);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:10px 0 26px}
+  .next h3{margin-top:0;color:var(--accent-deep)}
+  @media(max-width:860px){.grid{grid-template-columns:1fr;gap:0}nav.toc{display:none}}
+</style>
+
+<header class="hero"><div class="wrap"><div class="hero-in">
+  <div class="kicker">Real-Estate Marketing Intelligence · Architecture Decision Record</div>
+  <h1>Property Intelligence Blueprint</h1>
+  <p class="lede">An evidence-first pipeline that turns raw real-estate documents into verified property knowledge, audience-specific marketing strategy, and Instagram carousels — then hands finished assets to the Instagram engine that already exists.</p>
+  <div class="metastrip">
+    <span class="chip"><span class="dot"></span> Grounded on <b>DREAMZ (1).pdf</b></span>
+    <span class="chip">Stack today: <b>FastAPI · PostgreSQL 18 · gpt-5-nano</b></span>
+    <span class="chip">Rule: <b>extraction ≠ intelligence ≠ rendering ≠ publishing</b></span>
+    <span class="chip">15 governed agents</span>
+  </div>
+</div></div></header>
+
+<div class="wrap"><div class="grid">
+<nav class="toc" aria-label="Contents">
+  <a href="#a"><span class="l">A</span> Architecture</a>
+  <a href="#b"><span class="l">B</span> OSS repos</a>
+  <a href="#c"><span class="l">C</span> Licenses</a>
+  <a href="#d"><span class="l">D</span> Extraction</a>
+  <a href="#e"><span class="l">E</span> Multimodal</a>
+  <a href="#f"><span class="l">F</span> Schema</a>
+  <a href="#g"><span class="l">G</span> Evidence</a>
+  <a href="#h"><span class="l">H</span> Marketing</a>
+  <a href="#i"><span class="l">I</span> Carousel</a>
+  <a href="#j"><span class="l">J</span> Rendering</a>
+  <a href="#k"><span class="l">K</span> IG integration</a>
+  <a href="#l"><span class="l">L</span> Database</a>
+  <a href="#m"><span class="l">M</span> API</a>
+  <a href="#n"><span class="l">N</span> Pipeline</a>
+  <a href="#o"><span class="l">O</span> Failures</a>
+  <a href="#p"><span class="l">P</span> Security</a>
+  <a href="#q"><span class="l">Q</span> Cost</a>
+  <a href="#r"><span class="l">R</span> Roadmap</a>
+  <a href="#s"><span class="l">S</span> DREAMZ test</a>
+</nav>
+
+<main>
+
+<section id="a">
+  <div class="sec-head"><span class="sec-letter">A</span><h2>Recommended architecture</h2></div>
+  <p>Four isolated stages, connected only by typed contracts. This is the mandatory separation (Spec §33): each stage can be tested, replaced, and scaled on its own, and a failure in one never corrupts another. The anti-pattern <code>PDF → OCR → LLM → Instagram</code> is explicitly rejected because it launders unverified text straight into public marketing.</p>
+  <div class="stage-lane">
+    <div class="lane"><div class="h">1 · Extraction</div><ul><li>Deterministic + local OSS</li><li>Text, tables, images</li><li>Bounding boxes + evidence</li></ul></div>
+    <div class="lane"><div class="h">2 · Intelligence</div><ul><li>API LLM (gpt-5-nano)</li><li>Structured knowledge</li><li>Validation · marketing · plan</li></ul></div>
+    <div class="lane"><div class="h">3 · Rendering</div><ul><li>Deterministic</li><li>Real images only</li><li>IG-spec slides + QA</li></ul></div>
+    <div class="lane"><div class="h">4 · Publishing</div><ul><li>Existing IG engine</li><li>Consumed via contract</li><li>Not rebuilt</li></ul></div>
+  </div>
+  <svg class="diagram" viewBox="0 0 900 132" role="img" aria-label="Pipeline: raw input to leads">
+    <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="currentColor"/></marker></defs>
+    <g font-family="IBM Plex Mono, monospace" font-size="10.5" text-anchor="middle" style="color:var(--accent-deep)">
+      <g fill="var(--ink)">
+        <rect x="6" y="46" width="96" height="40" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/><text x="54" y="64">Raw docs</text><text x="54" y="77" fill="var(--muted)">any format</text>
+        <rect x="140" y="46" width="120" height="40" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/><text x="200" y="64">Extraction</text><text x="200" y="77" fill="var(--muted)">local + OCR</text>
+        <rect x="298" y="46" width="130" height="40" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/><text x="363" y="63">Knowledge +</text><text x="363" y="77" fill="var(--muted)">evidence</text>
+        <rect x="466" y="46" width="120" height="40" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/><text x="526" y="64">Validation</text><text x="526" y="77" fill="var(--muted)">conflicts</text>
+        <rect x="624" y="46" width="120" height="40" rx="8" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="684" y="63">Marketing +</text><text x="684" y="77" fill="var(--muted)">carousel</text>
+        <rect x="782" y="46" width="112" height="40" rx="8" fill="var(--surface)" stroke="var(--line-strong)"/><text x="838" y="64">Render →</text><text x="838" y="77" fill="var(--muted)">IG engine</text>
+      </g>
+      <g stroke="var(--accent)" fill="none" stroke-width="1.4" marker-end="url(#ar)" style="color:var(--accent)">
+        <line x1="104" y1="66" x2="136" y2="66"/><line x1="262" y1="66" x2="294" y2="66"/>
+        <line x1="430" y1="66" x2="462" y2="66"/><line x1="588" y1="66" x2="620" y2="66"/><line x1="746" y1="66" x2="778" y2="66"/>
+      </g>
+    </g>
+  </svg>
+  <p>The platform is the <strong>upstream intelligence layer</strong>. It ends at a JSON contract (§K); the current Instagram machine — accounts, hosting, Graph-API publish — is consumed, never replaced.</p>
+</section>
+
+<section id="b">
+  <div class="sec-head"><span class="sec-letter">B</span><h2>Open-source components (researched)</h2></div>
+  <p>Selected for reliability on real brochures, not popularity. The recommended set is deliberately <strong>permissive-license only</strong> so the platform is commercially safe to ship.</p>
+  <div class="cards two">
+    <div class="card"><h3>Docling <span class="badge b-ok">MIT</span></h3><p>IBM's layout-aware document converter: reading order, tables, figures, and structured JSON with coordinates. <b>Primary</b> extractor for digital PDFs.</p></div>
+    <div class="card"><h3>pdfplumber <span class="badge b-ok">MIT</span></h3><p>Character-level text + table extraction with exact bounding boxes. Deterministic <b>cross-check</b> against Docling. Already validated on DREAMZ in this repo.</p></div>
+    <div class="card"><h3>PaddleOCR <span class="badge b-ok">Apache-2.0</span></h3><p>Strong multilingual OCR (incl. Indic scripts) for scanned/image pages and text-in-images. <b>Primary OCR</b>.</p></div>
+    <div class="card"><h3>Tesseract <span class="badge b-ok">Apache-2.0</span></h3><p>Mature OCR <b>fallback</b>; already in the backend image via <code>pytesseract</code>.</p></div>
+    <div class="card"><h3>OCRmyPDF <span class="badge b-ok">MPL-2.0</span></h3><p>Wraps Tesseract to make scanned PDFs searchable — normalizes messy scans before extraction.</p></div>
+    <div class="card"><h3>pypdfium2 <span class="badge b-ok">Apache/BSD</span></h3><p>Google PDFium bindings for page rasterization + image extraction — the permissive replacement for AGPL PyMuPDF.</p></div>
+    <div class="card"><h3>open_clip <span class="badge b-ok">MIT</span></h3><p>Local zero-shot image classification (building/interior/floor-plan/map/logo) — no API cost for the common cases.</p></div>
+    <div class="card"><h3>OpenCV · Pillow <span class="badge b-ok">Apache / HPND</span></h3><p>Deterministic image ops: crop, resize, quality/blur scoring, perceptual-hash dedup. Already installed.</p></div>
+  </div>
+</section>
+
+<section id="c">
+  <div class="sec-head"><span class="sec-letter">C</span><h2>License &amp; commercial-use analysis</h2></div>
+  <p>The single most important architectural constraint for a commercial platform. Two popular tools carry real copyleft/commercial risk and are deliberately excluded from the shipped product.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Tool</th><th>License</th><th>Commercial ship?</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">Docling</td><td><span class="badge b-ok">MIT</span></td><td>Yes</td><td>Permissive; verify bundled model weights per release.</td></tr>
+      <tr><td class="mono">pdfplumber / pdfminer.six</td><td><span class="badge b-ok">MIT</span></td><td>Yes</td><td>Clean.</td></tr>
+      <tr><td class="mono">PaddleOCR</td><td><span class="badge b-ok">Apache-2.0</span></td><td>Yes</td><td>Clean; large model downloads.</td></tr>
+      <tr><td class="mono">Tesseract / OCRmyPDF</td><td><span class="badge b-ok">Apache / MPL-2.0</span></td><td>Yes</td><td>MPL is file-level copyleft — fine when used as a tool.</td></tr>
+      <tr><td class="mono">pypdfium2</td><td><span class="badge b-ok">Apache/BSD</span></td><td>Yes</td><td>PDFium under permissive terms.</td></tr>
+      <tr><td class="mono">PyMuPDF (fitz)</td><td><span class="badge b-danger">AGPL-3.0</span></td><td>Not by default</td><td><b>Excluded.</b> AGPL is network-copyleft; would force source disclosure. Use pypdfium2/pdfplumber, or buy Artifex's commercial license.</td></tr>
+      <tr><td class="mono">Marker / Surya</td><td><span class="badge b-warn">GPL + terms</span></td><td>Verify</td><td><b>Caution.</b> Historically GPL with revenue-based commercial restrictions. Excellent quality — only adopt after confirming the current license fits.</td></tr>
+      <tr><td class="mono">unstructured.io</td><td><span class="badge b-warn">Apache + caveats</span></td><td>Verify</td><td>Core is Apache; some extras/models differ. Optional.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn"><span class="t">Standing rule</span><b>Re-verify every license at build time.</b> These change between releases; the CI license-scan (Cost/Security agents) fails the build on any non-permissive dependency reaching the shipped image.</div>
+</section>
+
+<section id="d">
+  <div class="sec-head"><span class="sec-letter">D</span><h2>Document extraction strategy</h2></div>
+  <p>A routed, measured cascade — never "OCR everything." Ingestion classifies the file; extraction picks the cheapest path that works and measures its own coverage.</p>
+  <ul>
+    <li><strong>Digital PDF</strong> (like DREAMZ): Docling for structure + pdfplumber for coordinate-exact text/tables. No OCR.</li>
+    <li><strong>Scanned / image-only PDF:</strong> OCRmyPDF → PaddleOCR (Tesseract fallback). Trigger only when digital-text coverage is below a measured floor.</li>
+    <li><strong>Office files</strong> (DOCX/XLSX/PPTX/CSV): native parsers (python-docx, openpyxl, python-pptx, csv) — deterministic, no LLM.</li>
+    <li><strong>Loose images / screenshots / WhatsApp:</strong> OCR + Multimodal vision (§E).</li>
+  </ul>
+  <div class="callout"><span class="t">Why this matters — proven on DREAMZ</span>Raw text came out as <code class="mono">"NPS Viyaranyapura – 1Km ttings"</code> (columns interleaved, "fittings"→"ttings") with ligature corruption (<code>reects</code>→"reflects"). Layout-aware extraction + glyph normalization + evidence binding is the difference between a fact and garbage.</div>
+</section>
+
+<section id="e">
+  <div class="sec-head"><span class="sec-letter">E</span><h2>Multimodal extraction strategy</h2></div>
+  <p>Text and visuals are extracted in parallel and then <strong>bound to each other</strong>. DREAMZ alone carries a building render, a builder logo, a location map, a cluster plan, and a dimensioned floor plan — all embedded raster images.</p>
+  <ul>
+    <li><strong>Classify</strong> every image locally (open_clip zero-shot) into the asset taxonomy; deterministic dedup + blur/quality gating first.</li>
+    <li><strong>Detect</strong> floor plans / maps / logos; read floor-plan dimension callouts, but flag image-derived numbers for verification (never auto-trust).</li>
+    <li><strong>Bind</strong> each asset to the fact it evidences: <code>{asset_type:"floor_plan", page:4, property_type:"2BHK", area_sqft:940, confidence:0.96}</code>.</li>
+    <li><strong>API vision (gpt-5-nano accepts images)</strong> is a bounded fallback for ambiguous/critical assets only — logged and budgeted, never the default classifier.</li>
+  </ul>
+  <p>Real images are always preferred; the system never fabricates a building/interior to represent a real property (Spec §15).</p>
+</section>
+
+<section id="f">
+  <div class="sec-head"><span class="sec-letter">F</span><h2>Property knowledge schema</h2></div>
+  <p>One normalized model for apartments, villas, plots, sites, land, commercial, rental, resale, and new projects. Configurations are a <strong>list</strong> (a project may offer several BHK/areas — never flattened). Every populated field maps to a <code>claim</code> with evidence; unknowns are the literal <code>NOT_AVAILABLE</code>.</p>
+  <p>Full JSON Schema: <code>business/schema/property_knowledge.schema.json</code>. Grounded DREAMZ instance (benchmark oracle): <code>business/benchmarks/dreamz_expected.json</code>.</p>
+  <pre><code>claim = { field, value, confidence, source:{document,page,text|bbox,method} }
+nearby = { name, distance, distance_kind: SOURCE_DOCUMENT_DISTANCE | CALCULATED_DISTANCE }
+media  = { asset_type, page, bbox, quality, usable, confidence, source }</code></pre>
+</section>
+
+<section id="g">
+  <div class="sec-head"><span class="sec-letter">G</span><h2>Evidence &amp; validation architecture</h2></div>
+  <p>Three deterministic-plus-LLM gates stand between "extracted" and "publishable":</p>
+  <ul>
+    <li><strong>Evidence binding</strong> — every fact keeps <code>{document,page,text,bbox}</code>; a fact with no locatable span is dropped.</li>
+    <li><strong>Verification (Agent 05)</strong> — confirms the cited span <em>entails</em> the value (not mere co-occurrence) for key fields; scores confidence; catches hallucination.</li>
+    <li><strong>Contradiction / "clashes" (Agent 06)</strong> — diffs shared fields across documents &amp; versions; a real conflict → <code>HUMAN_VERIFICATION_REQUIRED</code>, never a silent pick.</li>
+  </ul>
+  <pre><code>CONFLICT DETECTED
+  Field: configuration.area_sqft
+  Source A: 940 sqft (docA p3)   Source B: 950 sqft (docB p2)
+  Action: HUMAN_VERIFICATION_REQUIRED</code></pre>
+</section>
+
+<section id="h">
+  <div class="sec-head"><span class="sec-letter">H</span><h2>Marketing intelligence algorithm</h2></div>
+  <p>Not "write a caption." The strategist (Agent 07) reasons over the <em>validated</em> model to choose audience, selling points, and angle — each tied to a verified fact.</p>
+  <ol>
+    <li><strong>Score angles</strong> deterministically by which verified facts are strong/present (budget? connectivity? floor plan? views?).</li>
+    <li><strong>LLM selects</strong> the winning angle ∈ {LOCATION, FAMILY, BUDGET, LIFESTYLE, AMENITY, CONNECTIVITY, SPACE, FLOOR_PLAN, BUILDER_TRUST} + rationale.</li>
+    <li><strong>Audiences</strong> only as data supports them — DREAMZ (budget 2BHK, park view, schools 500m–1km, metro 6km) → first-time buyers / young families → likely <span class="badge b-ok">BUDGET_FIRST</span> or <span class="badge b-ok">CONNECTIVITY_FIRST</span>.</li>
+    <li><strong>CTA</strong> matches the campaign goal: <code>site_visit → "DM 'VISIT' to book a site visit"</code>.</li>
+  </ol>
+  <p>No urgency, scarcity, guaranteed returns, or fabricated prices — ever.</p>
+</section>
+
+<section id="i">
+  <div class="sec-head"><span class="sec-letter">I</span><h2>Carousel generation algorithm</h2></div>
+  <p>Multiple reusable strategies (Property Discovery, Location First, Family First, Floor-Plan First…), selected by angle + which assets/facts actually exist. Each slide is structured data with a real asset reference.</p>
+  <pre><code>slide = { slide_number, template, headline, subheadline,
+          facts[verified], image_ref[real], badges[], cta, theme, brand }
+caption = { hook, body, key_points[], cta, hashtags[], location_tags[], keywords[] }</code></pre>
+  <p>A slide whose required asset/fact is missing is dropped or marked <code>needs_asset</code> — the template never forces a floor-plan slide when no floor plan exists.</p>
+</section>
+
+<section id="j">
+  <div class="sec-head"><span class="sec-letter">J</span><h2>Rendering technology recommendation</h2></div>
+  <p><strong>Recommendation: HTML/CSS templates → Playwright screenshot</strong>, with Pillow/Sharp for crops and SVG for vector badges/icons.</p>
+  <div class="why card">
+    <div><span>Why</span><div>Rich, maintainable templates (grid, web fonts, gradients, map/floor-plan crops, price badges) that a designer can iterate in the browser — far beyond hand-placed Pillow draw calls.</div></div>
+    <div><span>Solves</span><div>The design-system requirement (Spec §14): 1080×1350 / 1080×1080, typography, brand, overlays, cards, CTA panels — pixel-exact and deterministic.</div></div>
+    <div><span>Alts</span><div>Pillow (keep for simple overlays; verbose for complex layout) · Fabric.js/canvas (client-side, heavier) · raw SVG (great for vector, awkward for photo composition).</div></div>
+    <div><span>Why now</span><div><b>Chromium already ships in the backend image</b> (Playwright is installed for the current scraper) — zero new heavy dependency.</div></div>
+    <div><span>License</span><div>Playwright Apache-2.0 · Pillow HPND · both commercial-safe.</div></div>
+  </div>
+</section>
+
+<section id="k">
+  <div class="sec-head"><span class="sec-letter">K</span><h2>Existing Instagram integration</h2></div>
+  <p>A clean, one-way contract (Spec §26). The platform produces it; the existing engine (rags accounts, GitHub-raw hosting, Graph-API carousel publish) consumes it. No tight coupling.</p>
+  <pre><code>POST /api/content/generate  →
+{ "campaign_id":"", "property_id":"",
+  "carousel": { "slides":[], "images":[] },
+  "caption":"", "hashtags":[], "cta":"" }</code></pre>
+  <p>Only <code>AUTO_APPROVED</code> content that passed QA crosses this boundary. The Integration agent (14) validates the contract shape before hand-off and records publishing history.</p>
+</section>
+
+<section id="l">
+  <div class="sec-head"><span class="sec-letter">L</span><h2>Database design</h2></div>
+  <p>Reuse the <strong>PostgreSQL 18</strong> already running in this stack — extend it, don't add a new store. <code>JSONB</code> for the flexible knowledge model + evidence; <code>pgvector</code> only where semantic search earns its place (similar-property lookup, asset/text embeddings).</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Concern</th><th>Storage</th></tr></thead><tbody>
+    <tr><td>source_documents, bytes ref, versions</td><td class="mono">relational + object store</td></tr>
+    <tr><td>property_knowledge, claims, evidence</td><td class="mono">JSONB (+ generated columns for hot fields)</td></tr>
+    <tr><td>media assets, classifications</td><td class="mono">relational + object store</td></tr>
+    <tr><td>campaigns, carousels, generated content</td><td class="mono">relational + JSONB</td></tr>
+    <tr><td>embeddings (optional)</td><td class="mono">pgvector</td></tr>
+    <tr><td>publishing history, audit log</td><td class="mono">relational (append-only)</td></tr>
+    </tbody></table></div>
+  <p class="mono" style="font-size:.82rem;color:var(--muted)">Note: switch the DB image to <code>pgvector/pgvector:pg18</code> (or install the extension) when embeddings are introduced.</p>
+</section>
+
+<section id="m">
+  <div class="sec-head"><span class="sec-letter">M</span><h2>API design</h2></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Endpoint</th><th>Purpose</th></tr></thead><tbody>
+    <tr><td class="mono">POST /api/business/documents</td><td>Upload raw file(s) → ingestion (dedup, versioning)</td></tr>
+    <tr><td class="mono">POST /api/business/properties/{id}/extract</td><td>Run extraction → knowledge model + evidence</td></tr>
+    <tr><td class="mono">GET&nbsp; /api/business/properties/{id}</td><td>Validated model, claims, conflicts, confidence</td></tr>
+    <tr><td class="mono">POST /api/business/campaigns</td><td>Marketing intelligence + carousel plan for a goal</td></tr>
+    <tr><td class="mono">POST /api/business/campaigns/{id}/render</td><td>Render slides → QA verdict</td></tr>
+    <tr><td class="mono">GET&nbsp; /api/business/review/queue</td><td>Human-in-the-loop items with evidence</td></tr>
+    <tr><td class="mono">POST /api/content/generate</td><td>Emit the integration contract to the IG engine (§K)</td></tr>
+    </tbody></table></div>
+  <p>Namespaced under <code>/api/business/*</code> so the new dashboard is a <strong>separate surface</strong> from the current Studio, sharing only the backend + DB.</p>
+</section>
+
+<section id="n">
+  <div class="sec-head"><span class="sec-letter">N</span><h2>Processing pipeline &amp; agents</h2></div>
+  <p>15 governed agents across the four stages, each with a charter in <code>business/agents/*.agents.md</code> (hard MUST / MUST-NOT, escalation, cost budget, monitored metrics). The owner-requested roles map directly:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Requested</th><th>Agent(s)</th></tr></thead><tbody>
+    <tr><td>building</td><td class="mono">00 Orchestrator (+ full pipeline)</td></tr>
+    <tr><td>verification</td><td class="mono">05 Verification</td></tr>
+    <tr><td>subprocess</td><td class="mono">12 Cost Governor (meters every sub-op)</td></tr>
+    <tr><td>clashes</td><td class="mono">06 Contradiction</td></tr>
+    <tr><td>security</td><td class="mono">11 Security &amp; Privacy</td></tr>
+    <tr><td>+ added</td><td class="mono">01 Ingestion · 02 Extraction · 03 Vision · 04 Entity · 07 Marketing · 08 Carousel · 09 Render · 10 QA · 13 Human-Review · 14 Integration</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="o">
+  <div class="sec-head"><span class="sec-letter">O</span><h2>Failure cases (designed-for)</h2></div>
+  <div class="cards two">
+    <div class="card"><h3>Extraction</h3><ul><li>Image-only PDF, no OCR text</li><li>Rotated / multi-column pages</li><li>Ligature/glyph corruption</li><li>Non-Latin scripts</li></ul></div>
+    <div class="card"><h3>Knowledge</h3><ul><li>Hallucinated price/RERA</li><li>Cross-document conflicts</li><li>Multi-config brochures</li><li>Missing critical fields</li></ul></div>
+    <div class="card"><h3>Visual</h3><ul><li>Text overflow / cut-off</li><li>Low-res hero image</li><li>Altered contact number</li><li>Near-duplicate slides</li></ul></div>
+    <div class="card"><h3>System</h3><ul><li>LLM budget exceeded</li><li>Cache miss storms</li><li>Review SLA breach</li><li>IG contract drift</li></ul></div>
+  </div>
+  <p>Every case resolves to an explicit state (<code>REVIEW_REQUIRED</code> / <code>REJECTED</code> / <code>error</code>) — never a silent wrong answer.</p>
+</section>
+
+<section id="p">
+  <div class="sec-head"><span class="sec-letter">P</span><h2>Security &amp; privacy</h2></div>
+  <ul>
+    <li>Documents carry PII (names, phones, addresses, ownership, legal) — treated as sensitive: encrypted at rest where appropriate, access-controlled, audit-logged, deletable, configurable retention.</li>
+    <li>No secrets in source/Git (env / secret store only — consistent with the existing <code>.ragskey</code> + git-ignored <code>.env</code>).</li>
+    <li>Minimal LLM payloads; never send whole documents or unneeded PII to any external API; never PII in URLs/logs.</li>
+    <li>Enforced continuously by the Security &amp; Privacy agent (11) across every stage.</li>
+  </ul>
+</section>
+
+<section id="q">
+  <div class="sec-head"><span class="sec-letter">Q</span><h2>Cost optimization</h2></div>
+  <p>Local/OSS does the heavy lifting; the API LLM is a scalpel, not a firehose (Spec §28). Enforced by the Cost Governor (12).</p>
+  <ul>
+    <li><strong>Funnel:</strong> raw → local extraction → structured → <em>only relevant slice</em> → LLM. Whole documents are never sent.</li>
+    <li><strong>gpt-5-nano, minimal reasoning</strong> — verified at $0.05/1M in · $0.40/1M out, with 0 reasoning tokens on structured tasks.</li>
+    <li><strong>Cache by input hash</strong>; reuse one property's knowledge across all channels (§21) instead of re-parsing.</li>
+    <li><strong>Per-campaign budget ceilings</strong> with a live spend ledger per property.</li>
+  </ul>
+</section>
+
+<section id="r">
+  <div class="sec-head"><span class="sec-letter">R</span><h2>MVP → V2 → V3 roadmap</h2></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Phase</th><th>Scope</th><th>Exit criteria</th></tr></thead><tbody>
+    <tr><td><b>MVP</b></td><td>Digital-PDF extraction → knowledge model + evidence → validation → marketing → carousel plan → render → contract. DREAMZ end-to-end. Basic review UI.</td><td>DREAMZ produces a factually-correct, evidence-backed carousel + caption, auto-graded against the benchmark oracle.</td></tr>
+    <tr><td><b>V2</b></td><td>Scanned/OCR + Office/CSV inputs · multimodal vision classification · contradiction across versions · Business dashboard (separate surface) · queues, caching, observability, HITL workflow.</td><td>Handles the full input matrix (Spec §29) with measured field accuracy + cost per property.</td></tr>
+    <tr><td><b>V3</b></td><td>Content repurposing (story/reel/WhatsApp/LinkedIn) · pgvector similar-property · analytics feedback → content ranking · RBAC, audit, retention, rate limiting, failure recovery.</td><td>One property → many channels; engagement analytics drive content selection (no premature RL).</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="s">
+  <div class="sec-head"><span class="sec-letter">S</span><h2>End-to-end test — DREAMZ (1).pdf</h2></div>
+  <p>Dataset #1 is already parsed in this repo (4 pages, 4.5 MB). The pipeline must <strong>discover</strong> — never hard-code — this, matching the benchmark oracle:</p>
+  <div class="cards three">
+    <div class="card"><h3>Project</h3><ul><li>Landmark Dreamz</li><li>Landmark Homes (26 yrs)</li><li>128 units · 1.25 acres</li><li>2 BHK · 940 sqft</li></ul></div>
+    <div class="card"><h3>Location &amp; access</h3><ul><li>Vidyaranyapura, Bengaluru</li><li>Metro 6km · school 500m</li><li>Hospital 700m · malls ~6km</li><li>Approvals: 100% BBMP</li></ul></div>
+    <div class="card"><h3>Assets</h3><ul><li>Building render (p1)</li><li>Location map (p2)</li><li>Cluster plan (p3)</li><li>Floor plan + dims (p4)</li></ul></div>
+  </div>
+  <div class="callout"><span class="t">Correctness bar</span><code>pricing.price = NOT_AVAILABLE</code> — the brochure states no price. The pipeline passes only if it <b>refuses to invent one</b>, while still producing a compelling BUDGET/CONNECTIVITY-angle carousel from the facts it <em>can</em> verify.</div>
+</section>
+
+<div class="next">
+  <h3>Recommended next step → Phase 3 prototype</h3>
+  <p style="max-width:74ch">Per your Section 34, this is analysis only — no large code yet. On your go-ahead I'll build the MVP slice end-to-end against DREAMZ: <code>business/</code> extraction module (Docling + pdfplumber + pypdfium2) → knowledge model + evidence → validation → gpt-5-nano marketing + carousel plan → HTML/Playwright render → the <code>/api/content/generate</code> contract into your existing engine — graded automatically against the benchmark oracle already in this repo.</p>
+</div>
+
+<footer>
+  <p><strong>Property Intelligence Blueprint</strong> · Architecture Decision Record for the Instagram_Business real-estate platform. Governance: <code>business/AGENTS.md</code> + 15 agent charters · Schema: <code>business/schema/</code> · Benchmark: <code>business/benchmarks/dreamz_expected.json</code>.</p>
+</footer>
+
+</main>
+</div></div>

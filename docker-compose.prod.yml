@@ -1,0 +1,18 @@
+# Production overlay — serves the pre-built React bundle via nginx instead of the
+# live Vite dev server. Backend runs without --reload.
+#   Build & run: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+services:
+  backend:
+    command: ["uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  frontend:
+    image: !reset null
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: !reset null
+    working_dir: !reset null
+    environment: !reset null
+    volumes: !reset null
+    ports:
+      - "3000:80"

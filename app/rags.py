@@ -89,11 +89,12 @@ def add_account(
         cur = conn.cursor()
         cur.execute(
             """INSERT INTO accounts (label, handle, niche, ig_business_id, ig_access_token, is_active)
-               VALUES (?, ?, ?, ?, ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?)
+               RETURNING id""",
             (label.strip(), _clean_handle(handle), niche, ig_business_id.strip(),
              crypto.encrypt(ig_access_token.strip()), int(is_active)),
         )
-        new_id = int(cur.lastrowid)
+        new_id = int(cur.fetchone()["id"])
     return get_account(new_id)  # type: ignore[return-value]
 
 
@@ -157,6 +158,7 @@ _DEFAULT_SETTINGS = {
     "github_username": settings.GITHUB_USERNAME,
     "github_repo": settings.GITHUB_REPO,
     "github_branch": settings.GITHUB_BRANCH,
+    "github_token": "",   # PAT with contents:write — enables in-container publishing
     "posts_per_batch": str(settings.DEFAULT_POSTS_PER_BATCH),
     "slides_per_post": str(settings.DEFAULT_SLIDES_PER_POST),
     # Brand hashtags appended to every caption (space/comma separated).
@@ -182,9 +184,9 @@ def set_setting(key: str, value: str) -> None:
     with connect() as conn:
         conn.execute(
             """INSERT INTO app_settings (key, value, updated_at)
-               VALUES (?, ?, datetime('now'))
+               VALUES (?, ?, to_char(now(),'YYYY-MM-DD HH24:MI:SS'))
                ON CONFLICT(key) DO UPDATE SET value = excluded.value,
-                                              updated_at = datetime('now')""",
+                                              updated_at = to_char(now(),'YYYY-MM-DD HH24:MI:SS')""",
             (key, value),
         )
 

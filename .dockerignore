@@ -1,0 +1,32 @@
+# Backend build context — keep it lean and free of secrets/local data.
+venv/
+.venv/
+env/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Frontend is built by its own Dockerfile.
+frontend/
+node_modules/
+
+# Secrets & local data are mounted at runtime, never baked into the image.
+.env
+.env.*
+!.env.example
+.ragskey
+*.db
+*.sqlite
+*.sqlite3
+
+# Version control / IDE / OS noise
+.git/
+.gitignore
+.claude/
+*.log
+.DS_Store
+Thumbs.db
+
+# Rendered previews are large and bind-mounted at runtime.
+images/

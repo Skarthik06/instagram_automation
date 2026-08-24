@@ -37,6 +37,20 @@ def _get_client():
     return _client
 
 
+def _is_reasoning_model(model: str) -> bool:
+    """True for OpenAI reasoning models (gpt-5* nano/mini/full, o1/o3/o4).
+
+    These use a different Chat Completions contract than gpt-4o/4.1: they take
+    `max_completion_tokens` (not `max_tokens`), reject a custom `temperature`
+    (only the default is allowed), and accept `reasoning_effort`. The `*-chat`
+    GPT-5 variants are conversational (non-reasoning) and are excluded.
+    """
+    m = model.lower()
+    if "chat" in m:
+        return False
+    return m.startswith(("o1", "o3", "o4")) or m.startswith("gpt-5")
+
+
 _SYSTEM = (
     "You are a senior Instagram content strategist and copywriter. "
     "You ALWAYS respond with strict, valid JSON only — no markdown, no prose "
@@ -184,17 +198,31 @@ def generate_batch(
         temperature = 0.85
 
     client = _get_client()
+    # Build the request per model family. Reasoning models (gpt-5*/o-series)
+    # take max_completion_tokens + reasoning_effort and reject custom temperature;
+    # classic chat models (gpt-4o/4.1) take max_tokens + temperature.
+    kwargs: Dict[str, Any] = {
+        "model": settings.OPENAI_MODEL,
+        "messages": [
+            {"role": "system", "content": _SYSTEM},
+            {"role": "user", "content": user_prompt},
+        ],
+        "response_format": {"type": "json_object"},
+    }
+    if _is_reasoning_model(settings.OPENAI_MODEL):
+        kwargs["max_completion_tokens"] = settings.LLM_MAX_OUTPUT_TOKENS
+        if settings.LLM_REASONING_EFFORT:
+            kwargs["reasoning_effort"] = settings.LLM_REASONING_EFFORT
+        if settings.LLM_VERBOSITY:
+            kwargs["verbosity"] = settings.LLM_VERBOSITY
+        # NB: temperature is intentionally omitted — reasoning models only
+        # support the default and error on any explicit value.
+    else:
+        kwargs["temperature"] = temperature
+        kwargs["max_tokens"] = settings.LLM_MAX_OUTPUT_TOKENS
+
     try:
-        resp = client.chat.completions.create(
-            model=settings.OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": _SYSTEM},
-                {"role": "user", "content": user_prompt},
-            ],
-            response_format={"type": "json_object"},
-            temperature=temperature,
-            max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
-        )
+        resp = client.chat.completions.create(**kwargs)
     except Exception as exc:  # network / auth / rate limit
         raise LLMError(f"OpenAI request failed: {exc}") from exc
 
@@ -217,12 +245,17 @@ def generate_batch(
         raise LLMError("Model returned posts without slides.")
 
     usage = resp.usage
+    # Reasoning models bill reasoning tokens as (invisible) output; surface them
+    # so the UI/logs can see how much of the output spend was reasoning.
+    details = getattr(usage, "completion_tokens_details", None)
+    reasoning_tokens = getattr(details, "reasoning_tokens", 0) or 0 if details else 0
     return {
         "posts": normalized,
         "model": settings.OPENAI_MODEL,
         "usage": {
             "prompt_tokens": getattr(usage, "prompt_tokens", 0),
             "completion_tokens": getattr(usage, "completion_tokens", 0),
+            "reasoning_tokens": reasoning_tokens,
             "total_tokens": getattr(usage, "total_tokens", 0),
             # input:output ratio — see README "Token economics"
             "io_ratio": round(
