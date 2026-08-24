@@ -1,0 +1,75 @@
+# ---------------------------------------------------------------------------
+# Instagram_Business — backend (FastAPI + carousel renderer + IG publisher)
+# ---------------------------------------------------------------------------
+# Pinned to Python 3.12 for guaranteed wheels (opencv, playwright, pillow, …).
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    # The renderer reads fonts from  $WINDIR/Fonts  (a Windows-ism). We point
+    # WINDIR at a Linux dir populated with the exact filenames the code expects.
+    WINDIR=/fonts
+
+WORKDIR /app
+
+# ---- System dependencies -------------------------------------------------
+#  libgl1 / libglib2.0-0  -> OpenCV runtime
+#  tesseract-ocr          -> pytesseract watermark/text detection
+#  fonts-liberation       -> Arial/Times-metric-compatible faces for slides
+#  fonts-dejavu-core      -> emoji/unicode fallback coverage
+#  git                    -> GitHub-raw image hosting at publish time
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libgl1 \
+        libglib2.0-0 \
+        tesseract-ocr \
+        fonts-liberation \
+        fonts-dejavu-core \
+        git \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---- Fonts: satisfy the renderer's hardcoded Windows font filenames -------
+# render.py asks for segoeui/arial/georgia/times (+bold). Map each to a real
+# Liberation face so slides render with proper proportional type on Linux.
+RUN mkdir -p /fonts/Fonts \
+    && LIB=/usr/share/fonts/truetype/liberation \
+    && ln -sf $LIB/LiberationSans-Regular.ttf  /fonts/Fonts/arial.ttf \
+    && ln -sf $LIB/LiberationSans-Regular.ttf  /fonts/Fonts/segoeui.ttf \
+    && ln -sf $LIB/LiberationSans-Bold.ttf     /fonts/Fonts/arialbd.ttf \
+    && ln -sf $LIB/LiberationSans-Bold.ttf     /fonts/Fonts/segoeuib.ttf \
+    && ln -sf $LIB/LiberationSerif-Regular.ttf /fonts/Fonts/georgia.ttf \
+    && ln -sf $LIB/LiberationSerif-Regular.ttf /fonts/Fonts/times.ttf \
+    && ln -sf $LIB/LiberationSerif-Bold.ttf    /fonts/Fonts/georgiab.ttf
+
+# ---- Python dependencies (cached layer) ----------------------------------
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
+
+# ---- Playwright chromium (Quotes background scraper) ---------------------
+RUN playwright install --with-deps chromium
+
+# ---- Docling (enhanced layout/table/OCR extraction) ----------------------
+# CPU-only torch first (keeps the image ~2GB smaller than the default CUDA wheel),
+# then Docling. Pre-fetch models at build so the first request isn't slow/offline.
+COPY requirements-docling.txt .
+RUN pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision \
+    && pip install -r requirements-docling.txt \
+    && (docling-tools models download || python -c "from docling.document_converter import DocumentConverter; DocumentConverter()" || true)
+
+# ---- Multi-language fonts (Kannada + Devanagari + Latin) for the renderer -
+# Late layer so the heavy pip/playwright/docling layers stay cached. Noto covers
+# Kannada, Devanagari (Hindi) and Latin so Chromium renders Indic slides cleanly.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        fonts-noto-core fonts-noto-ui-core \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---- Application code -----------------------------------------------------
+COPY app/ ./app/
+COPY config.json ./config.json
+
+EXPOSE 8000
+
+# Bind to all interfaces inside the container network (compose maps :8000).
+CMD ["uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,14 @@
+# OPTIONAL — enhanced layout/table/OCR extraction via Docling (MIT).
+# Heavy (pulls torch + models, multi-GB image, long build). Enable only when you
+# want Docling as the primary extractor:
+#
+#   1) add `RUN pip install -r requirements-docling.txt` to Dockerfile.backend
+#      (after the base requirements install)
+#   2) set  BUSINESS_USE_DOCLING=1  in .env
+#   3) docker compose up -d --build backend
+#
+# The pipeline works fully without this; the built-in pdfplumber + Tesseract OCR
+# path handles digital and scanned documents. Docling just improves reading order
+# and tables on complex layouts.
+
+docling>=2.0.0

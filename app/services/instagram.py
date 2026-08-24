@@ -9,7 +9,10 @@ from typing import Dict, List, Optional
 
 import requests
 
-GRAPH = "https://graph.facebook.com/v24.0"
+from app import settings
+
+# Instagram Graph API base — version is env-configurable (GRAPH_API_VERSION, default v26.0).
+GRAPH = f"https://graph.facebook.com/{settings.GRAPH_API_VERSION}"
 
 
 class InstagramError(RuntimeError):

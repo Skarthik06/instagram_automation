@@ -17,6 +17,10 @@ const paths = {
   edit: 'M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z',
   x: 'M6 6l12 12M18 6L6 18',
   bolt: 'M13 2L4 14h7l-1 8 9-12h-7z',
+  building: 'M3 21h18M5 21V5a1 1 0 011-1h8a1 1 0 011 1v16M15 21V9h3a1 1 0 011 1v11M8 8h2M8 12h2M8 16h2',
+  pin: 'M12 21s-6-5.686-6-10a6 6 0 1112 0c0 4.314-6 10-6 10zM12 11a2 2 0 100-4 2 2 0 000 4z',
+  doc: 'M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8zM14 3v5h5M9 13h6M9 17h4',
+  shield: 'M12 3l7 3v6c0 4-3 7-7 8-4-1-7-4-7-8V6z',
 };
 
 export function Icon({ name, size = 20, className = '', stroke = 2 }) {

@@ -27,10 +27,59 @@ from app.services.llm import LLMError
 async def lifespan(app: FastAPI):
     db.init_db()
     rags.seed_from_env()
+    from app.business import store as business_store
+    business_store.init_business_db()
     yield
 
 
 app = FastAPI(title="Instagram Automation", version="4.0.0", lifespan=lifespan)
+
+# Real-estate Business platform (upstream intelligence layer) — separate surface.
+from app.business.api import router as business_router  # noqa: E402
+from app.business.admin_api import router as admin_router  # noqa: E402
+from app.business.api_v1 import router as v1_router  # noqa: E402
+from app.business import auth as _auth  # noqa: E402
+from fastapi.responses import JSONResponse  # noqa: E402
+from fastapi.exception_handlers import http_exception_handler  # noqa: E402
+from starlette.exceptions import HTTPException as _StarletteHTTPException  # noqa: E402
+import time as _time, uuid as _uuid  # noqa: E402
+
+app.include_router(admin_router)
+app.include_router(v1_router)
+app.include_router(business_router)
+
+
+# /api/v1 returns the standard {success,data,error,meta} envelope on errors too.
+@app.exception_handler(_StarletteHTTPException)
+async def _v1_exc(request, exc):
+    if request.url.path.startswith("/api/v1") and not request.url.path.startswith("/api/v1/admin"):
+        return JSONResponse(status_code=exc.status_code, content={
+            "success": False, "data": None,
+            "error": {"code": _V1_CODES.get(exc.status_code, "ERROR"), "message": exc.detail},
+            "meta": {"request_id": _uuid.uuid4().hex[:16], "timestamp": int(_time.time())}})
+    return await http_exception_handler(request, exc)
+
+
+_V1_CODES = {400: "BAD_REQUEST", 401: "AUTH_REQUIRED", 404: "NOT_FOUND",
+             413: "TOO_LARGE", 500: "INTERNAL_ERROR"}
+
+# ---- Single-admin gate: every /api/* route requires a valid admin token,
+# except health + the public login/refresh endpoints. (/cdn images stay open so
+# the browser can load rendered slides.)  ADMIN-ONLY architecture.
+_OPEN_PATHS = {"/api/health", "/api/v1/admin/login", "/api/v1/admin/refresh"}
+
+
+@app.middleware("http")
+async def admin_gate(request, call_next):
+    path = request.url.path
+    if request.method == "OPTIONS" or not path.startswith("/api/") or path in _OPEN_PATHS:
+        return await call_next(request)
+    if not _auth.verify(_auth.token_from_header(request.headers.get("authorization"))):
+        return JSONResponse(status_code=401,
+                            content={"success": False, "error": {"code": "UNAUTHORIZED",
+                                     "message": "Admin authentication required."}})
+    return await call_next(request)
+
 
 app.add_middleware(
     CORSMiddleware,

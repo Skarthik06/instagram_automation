@@ -31,3 +31,13 @@ boot.log
 # --- OS ---
 .DS_Store
 Thumbs.db
+
+# --- Generated business artifacts & inputs (do NOT commit) ---
+# rendered carousel slides, fetched photos, OSM maps (all generated)
+images/business/
+# generated slide previews
+images/previews/
+# uploaded source documents (inputs; may contain PII)
+data-business/
+# local Claude Code session/agent config
+.claude/

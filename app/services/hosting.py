@@ -10,9 +10,12 @@ Pushing happens at PUBLISH time only; previews are served locally before that.
 """
 from __future__ import annotations
 
+import base64
 import subprocess
 from pathlib import Path
 from typing import List
+
+import requests
 
 from app import rags, settings
 
@@ -23,6 +26,64 @@ def _git_cfg():
         (rags.get_setting("github_repo") or settings.GITHUB_REPO),
         (rags.get_setting("github_branch") or settings.GITHUB_BRANCH),
     )
+
+
+def _github_token() -> str:
+    """Token from the Settings panel (rags) takes precedence over .env."""
+    return (rags.get_setting("github_token") or settings.GITHUB_TOKEN or "").strip()
+
+
+def check_repo_access() -> dict:
+    """Verify the configured token can reach the repo -> powers the "Repo connected"
+    status in Settings. Never returns the token."""
+    user, repo, branch = _git_cfg()
+    full = f"{user}/{repo}"
+    token = _github_token()
+    if not token:
+        return {"connected": False, "reason": "no_token", "repo": full, "branch": branch}
+    try:
+        r = requests.get(f"https://api.github.com/repos/{user}/{repo}",
+                         headers={"Authorization": f"Bearer {token}",
+                                  "Accept": "application/vnd.github+json"}, timeout=15)
+    except Exception as exc:  # noqa: BLE001
+        return {"connected": False, "reason": str(exc)[:100], "repo": full, "branch": branch}
+    if r.status_code == 200:
+        body = r.json()
+        perms = body.get("permissions") or {}
+        return {"connected": True, "repo": full, "branch": branch,
+                "private": body.get("private"), "can_push": perms.get("push", True)}
+    reason = "bad_token" if r.status_code in (401, 403) else ("repo_not_found" if r.status_code == 404 else f"http_{r.status_code}")
+    return {"connected": False, "reason": reason, "repo": full, "branch": branch}
+
+
+def _upload_via_api(paths: List[str], commit_msg: str) -> List[str]:
+    """Upload files with the GitHub Contents API (no local git repo needed — works
+    inside the container). Requires a token with `contents:write` on the repo."""
+    user, repo, branch = _git_cfg()
+    token = _github_token()
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json",
+               "X-GitHub-Api-Version": "2022-11-28"}
+    urls: List[str] = []
+    for p in paths:
+        rel = Path(p).resolve().relative_to(settings.BASE_DIR).as_posix()
+        api = f"https://api.github.com/repos/{user}/{repo}/contents/{rel}"
+        # A file that already exists needs its blob sha to be overwritten.
+        sha = None
+        try:
+            g = requests.get(api, params={"ref": branch}, headers=headers, timeout=20)
+            if g.status_code == 200:
+                sha = g.json().get("sha")
+        except Exception:  # noqa: BLE001
+            pass
+        body = {"message": commit_msg, "branch": branch,
+                "content": base64.b64encode(Path(p).read_bytes()).decode("ascii")}
+        if sha:
+            body["sha"] = sha
+        r = requests.put(api, json=body, headers=headers, timeout=45)
+        if r.status_code not in (200, 201):
+            raise RuntimeError(f"GitHub upload failed ({r.status_code}) for {rel}: {r.text[:200]}")
+        urls.append(raw_url(p))
+    return urls
 
 
 def raw_url(local_path: str) -> str:
@@ -90,11 +151,28 @@ def sync() -> bool:
         return False
 
 
+def _ensure_auth_remote() -> None:
+    """If a GITHUB_TOKEN is configured, point origin at an authenticated HTTPS URL
+    so `git push` works non-interactively (e.g. inside the backend container)."""
+    token = settings.GITHUB_TOKEN
+    if not token:
+        return
+    user, repo, _ = _git_cfg()
+    url = f"https://{user}:{token}@github.com/{user}/{repo}.git"
+    _run_quiet(["git", "remote", "set-url", "origin", url])
+
+
 def publish_images(paths: List[str], commit_msg: str = "Add carousel slides") -> List[str]:
-    """Stage, commit and push the given image files; return their raw URLs."""
+    """Publish image files to public hosting and return their raw URLs.
+
+    Prefers the GitHub Contents API (works in-container with a token). Falls back
+    to local `git` only when no token is configured (e.g. running on the host)."""
     if not paths:
         return []
+    if _github_token():
+        return _upload_via_api(paths, commit_msg)
     _, _, branch = _git_cfg()
+    _ensure_auth_remote()
     try:
         for p in paths:
             _run(["git", "add", p])

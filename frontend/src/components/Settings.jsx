@@ -52,11 +52,15 @@ export default function Settings({ accounts, settings, reload, notify }) {
   const [saving, setSaving] = useState(false);
   const [keys, setKeys] = useState({});
   const [keysSaving, setKeysSaving] = useState(false);
+  const [gh, setGh] = useState(null); // live GitHub repo-connection status
+
+  const loadGh = () => api.bizGithubStatus().then(setGh).catch(() => setGh(null));
+  useEffect(() => { loadGh(); }, []);
 
   useEffect(() => {
     if (settings) setKeys({
       news_api_key: '', github_username: settings.github_username || '', github_repo: settings.github_repo || '',
-      github_branch: settings.github_branch || '', posts_per_batch: settings.posts_per_batch || 3,
+      github_branch: settings.github_branch || '', github_token: '', posts_per_batch: settings.posts_per_batch || 3,
       slides_per_post: settings.slides_per_post || 4, fixed_hashtags: settings.fixed_hashtags || '',
     });
   }, [settings]);
@@ -85,8 +89,10 @@ export default function Settings({ accounts, settings, reload, notify }) {
     try {
       const body = { ...keys, posts_per_batch: Number(keys.posts_per_batch), slides_per_post: Number(keys.slides_per_post) };
       if (!body.news_api_key) delete body.news_api_key; // blank = keep existing
+      if (!body.github_token) delete body.github_token; // blank = keep existing token
       await api.updateSettings(body);
       await reload();
+      await loadGh();
       notify('Settings saved');
     } catch (e) { notify(e?.response?.data?.detail || 'Save failed', 'error'); }
     finally { setKeysSaving(false); }
@@ -169,12 +175,6 @@ export default function Settings({ accounts, settings, reload, notify }) {
             placeholder="motivation dailyinspiration positivity mindset" />
         </Field>
 
-        <div className="grid md:grid-cols-3 gap-4">
-          <Field label="GitHub user"><input className="input font-mono" value={keys.github_username || ''} onChange={(e) => setKeys({ ...keys, github_username: e.target.value })} /></Field>
-          <Field label="GitHub repo"><input className="input font-mono" value={keys.github_repo || ''} onChange={(e) => setKeys({ ...keys, github_repo: e.target.value })} /></Field>
-          <Field label="Branch"><input className="input font-mono" value={keys.github_branch || ''} onChange={(e) => setKeys({ ...keys, github_branch: e.target.value })} /></Field>
-        </div>
-
         <div className="grid md:grid-cols-2 gap-4">
           <Field label="Default posts / batch"><input className="input" type="number" min="1" max="6" value={keys.posts_per_batch} onChange={(e) => setKeys({ ...keys, posts_per_batch: e.target.value })} /></Field>
           <Field label="Default slides / post"><input className="input" type="number" min="1" max="6" value={keys.slides_per_post} onChange={(e) => setKeys({ ...keys, slides_per_post: e.target.value })} /></Field>
@@ -183,6 +183,39 @@ export default function Settings({ accounts, settings, reload, notify }) {
         <div className="flex justify-end">
           <button className="btn btn-accent btn-sm" onClick={saveKeys} disabled={keysSaving}>
             {keysSaving ? <Spinner size={14} /> : <Icon name="check" size={14} />} Save settings
+          </button>
+        </div>
+      </div>
+
+      {/* GITHUB HOSTING — separate section (image hosting for Instagram publishing) */}
+      <h2 className="font-display text-2xl mt-10 mb-1">GitHub image hosting</h2>
+      <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
+        Instagram's Graph API needs public image URLs. Slides are uploaded to this repo via the GitHub API at publish time.
+        A token with <span className="font-mono">contents:write</span> enables publishing directly from the app (no local git needed).
+      </p>
+      <div className="panel p-5 space-y-5">
+        <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: '#0d0c0a', border: '1px solid var(--border)' }}>
+          <span className={gh?.connected ? 'live-dot' : ''} style={!gh?.connected ? { width: 7, height: 7, borderRadius: 99, background: 'var(--danger)' } : {}} />
+          {gh?.connected
+            ? <span className="text-sm">Repo <b style={{ color: 'var(--ok)' }}>connected</b> — <span className="font-mono">{gh.repo}</span> ({gh.branch}){gh.can_push === false && <span style={{ color: 'var(--danger)' }}> · token lacks write</span>}</span>
+            : <span className="text-sm">Repo <b style={{ color: 'var(--danger)' }}>not connected</b>{gh?.reason ? <span style={{ color: 'var(--faint)' }}> — {gh.reason.replace(/_/g, ' ')}</span> : ''} — add a token with Contents write</span>}
+        </div>
+
+        <Field label="GitHub Personal Access Token" hint="Fine-grained PAT with Contents: Read & Write on the repo below. Blank = keep existing. Stored encrypted (rags), never sent to the browser.">
+          <input className="input font-mono" type="password" value={keys.github_token || ''}
+            onChange={(e) => setKeys({ ...keys, github_token: e.target.value })}
+            placeholder={settings?.github_token_set ? '•••••••• (set)' : 'github_pat_...'} />
+        </Field>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <Field label="GitHub user"><input className="input font-mono" value={keys.github_username || ''} onChange={(e) => setKeys({ ...keys, github_username: e.target.value })} /></Field>
+          <Field label="GitHub repo"><input className="input font-mono" value={keys.github_repo || ''} onChange={(e) => setKeys({ ...keys, github_repo: e.target.value })} /></Field>
+          <Field label="Branch"><input className="input font-mono" value={keys.github_branch || ''} onChange={(e) => setKeys({ ...keys, github_branch: e.target.value })} /></Field>
+        </div>
+
+        <div className="flex justify-end">
+          <button className="btn btn-accent btn-sm" onClick={saveKeys} disabled={keysSaving}>
+            {keysSaving ? <Spinner size={14} /> : <Icon name="check" size={14} />} Save GitHub settings
           </button>
         </div>
       </div>

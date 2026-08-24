@@ -161,6 +161,18 @@ body::after {
 /* niche accent theming */
 .accent-quotes { --accent: var(--amber); --accent-2: var(--amber-2); }
 .accent-news   { --accent: var(--cyan);  --accent-2: var(--cyan-2); }
+.accent-business { --accent: #3fb98f; --accent-2: #6fd3af; }
+
+/* business dashboard helpers */
+.kv { display:grid; grid-template-columns: 130px 1fr; gap:.4rem 1rem; font-size:.9rem; }
+.kv dt { color: var(--faint); font-family: var(--font-mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; padding-top:2px; }
+.kv dd { margin:0; color: var(--text); }
+.pill { display:inline-flex; align-items:center; gap:.35rem; font-family:var(--font-mono); font-size:.72rem; padding:.22rem .6rem; border-radius:999px; }
+.pill-ok { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); }
+.pill-warn { background: color-mix(in srgb, var(--danger) 16%, transparent); color: var(--danger); }
+.evidence { font-family: var(--font-mono); font-size:.76rem; color: var(--muted); border-left:2px solid var(--border-2); padding-left:.6rem; }
+.slidegrid { display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:.6rem; }
+.slidegrid img { width:100%; border-radius:10px; border:1px solid var(--border); display:block; }
 
 /* nav rail */
 .nav-item {

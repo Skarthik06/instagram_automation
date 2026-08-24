@@ -1,0 +1,187 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://instagram-business/schema/property_knowledge.schema.json",
+  "title": "PropertyKnowledgeModel",
+  "description": "Normalized, evidence-bound real-estate knowledge model (Spec §9). Supports apartments, villas, plots, sites, land, commercial, rental, resale, and new projects. Every populated fact SHOULD have a matching entry in `claims` with source evidence; unknown values MUST be the literal string 'NOT_AVAILABLE' rather than guessed.",
+  "type": "object",
+  "definitions": {
+    "evidence": {
+      "type": "object",
+      "required": ["document", "page"],
+      "properties": {
+        "document": { "type": "string" },
+        "page": { "type": "integer", "minimum": 1 },
+        "text": { "type": "string", "description": "Verbatim source span" },
+        "bbox": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "[x0, top, x1, bottom] in page coordinates"
+        },
+        "method": {
+          "type": "string",
+          "enum": ["digital_text", "ocr", "table", "vision", "human"]
+        }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "required": ["field", "value", "confidence", "source"],
+      "properties": {
+        "field": { "type": "string", "description": "Dotted path, e.g. configuration.area_sqft" },
+        "value": {},
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "$ref": "#/definitions/evidence" }
+      }
+    },
+    "conflict": {
+      "type": "object",
+      "required": ["field", "value_a", "source_a", "value_b", "source_b", "action"],
+      "properties": {
+        "field": { "type": "string" },
+        "value_a": {}, "source_a": { "$ref": "#/definitions/evidence" },
+        "value_b": {}, "source_b": { "$ref": "#/definitions/evidence" },
+        "kind": { "type": "string", "enum": ["exact", "semantic", "range"] },
+        "action": { "type": "string", "enum": ["HUMAN_VERIFICATION_REQUIRED"] }
+      }
+    },
+    "media_asset": {
+      "type": "object",
+      "required": ["asset_type", "source"],
+      "properties": {
+        "asset_type": {
+          "type": "string",
+          "enum": [
+            "building_exterior", "building_interior", "living_room", "bedroom",
+            "kitchen", "bathroom", "balcony", "amenity", "kids_area", "sports",
+            "parking", "landscape", "floor_plan", "site_plan", "cluster_plan",
+            "location_map", "logo", "builder_logo", "architectural_render",
+            "document_scan", "unknown"
+          ]
+        },
+        "page": { "type": "integer" },
+        "bbox": { "type": "array", "items": { "type": "number" } },
+        "storage_ref": { "type": "string" },
+        "resolution": { "type": "string" },
+        "aspect_ratio": { "type": "string" },
+        "quality": { "type": "number", "minimum": 0, "maximum": 1 },
+        "blurry": { "type": "boolean" },
+        "is_duplicate": { "type": "boolean" },
+        "usable": { "type": "boolean" },
+        "recommended_slide_use": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "$ref": "#/definitions/evidence" }
+      }
+    },
+    "nearby": {
+      "type": "object",
+      "required": ["name", "distance_kind"],
+      "properties": {
+        "name": { "type": "string" },
+        "distance": { "type": "string", "description": "As stated, e.g. '6 Km', '500 Mts'" },
+        "distance_kind": {
+          "type": "string",
+          "enum": ["SOURCE_DOCUMENT_DISTANCE", "CALCULATED_DISTANCE"],
+          "description": "Spec §18 — never present calculated as source-stated"
+        },
+        "category": { "type": "string", "description": "school|hospital|mall|transit|park|other" },
+        "source": { "$ref": "#/definitions/evidence" }
+      }
+    }
+  },
+  "required": ["property", "location", "configuration", "pricing", "project", "claims", "confidence"],
+  "properties": {
+    "property": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "project_name": { "type": "string" },
+        "property_type": { "type": "string", "description": "apartment|villa|plot|site|land|commercial|rental|resale" },
+        "category": { "type": "string", "description": "budget|mid|premium|luxury" },
+        "status": { "type": "string", "description": "new|under_construction|ready|resale" },
+        "builder": { "type": "string" },
+        "developer": { "type": "string" }
+      }
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "address": { "type": "string" },
+        "city": { "type": "string" },
+        "locality": { "type": "string" },
+        "pincode": { "type": "string" },
+        "landmark": { "type": "string" },
+        "latitude": { "type": ["number", "null"] },
+        "longitude": { "type": ["number", "null"] }
+      }
+    },
+    "configuration": {
+      "type": "array",
+      "description": "A list — a project may offer multiple configs (Spec: multi-config brochures modelled, not flattened).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "bhk": { "type": "string" },
+          "label": { "type": "string" },
+          "area_sqft": { "type": ["number", "null"] },
+          "bedrooms": { "type": ["integer", "null"] },
+          "bathrooms": { "type": ["integer", "null"] },
+          "balcony": { "type": ["integer", "null"] },
+          "rooms": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "dimensions": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "pricing": {
+      "type": "object",
+      "properties": {
+        "price": { "type": ["number", "string", "null"] },
+        "price_min": { "type": ["number", "null"] },
+        "price_max": { "type": ["number", "null"] },
+        "price_per_sqft": { "type": ["number", "null"] },
+        "currency": { "type": "string", "default": "INR" }
+      }
+    },
+    "project": {
+      "type": "object",
+      "properties": {
+        "land_area": { "type": "string" },
+        "total_units": { "type": ["integer", "null"] },
+        "floors": { "type": ["integer", "null"] },
+        "blocks": { "type": ["integer", "null"] }
+      }
+    },
+    "amenities": { "type": "array", "items": { "type": "string" } },
+    "connectivity": { "type": "array", "items": { "$ref": "#/definitions/nearby" } },
+    "approvals": { "type": "array", "items": { "type": "string" } },
+    "features": { "type": "array", "items": { "type": "string" } },
+    "views": { "type": "array", "items": { "type": "string" } },
+    "floor_plans": { "type": "array", "items": { "$ref": "#/definitions/media_asset" } },
+    "media": { "type": "array", "items": { "$ref": "#/definitions/media_asset" } },
+    "contacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "phone": { "type": "string" },
+          "role": { "type": "string" },
+          "source": { "$ref": "#/definitions/evidence" }
+        }
+      }
+    },
+    "source_documents": { "type": "array", "items": { "type": "string" } },
+    "claims": { "type": "array", "items": { "$ref": "#/definitions/claim" } },
+    "conflicts": { "type": "array", "items": { "$ref": "#/definitions/conflict" } },
+    "confidence": { "type": "object", "description": "field-path -> 0..1 rollup" }
+  }
+}

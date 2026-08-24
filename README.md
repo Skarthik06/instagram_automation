@@ -61,7 +61,7 @@ Copy `.env.example` to `.env` and paste your `OPENAI_API_KEY`. Add your Instagra
 account(s) from the **Settings** tab in the UI (an existing `.env` IG account is
 auto-migrated on first run).
 
-### Run
+### Run (local dev)
 
 ```bash
 # terminal 1 — backend
@@ -71,6 +71,40 @@ uvicorn app.api:app --reload --port 8000
 # terminal 2 — frontend
 cd frontend && npm run dev      # http://localhost:3000
 ```
+
+---
+
+## Run with Docker (Instagram_Business stack)
+
+The whole app ships as a 3-container stack (project name **`instagram_business`**):
+
+| Container | Image | Host port | Role |
+| --- | --- | --- | --- |
+| `instagram_business_frontend` | nginx (built React/Vite bundle) | **3000** | UI + reverse-proxy for `/api` and `/cdn` |
+| `instagram_business_backend`  | FastAPI + renderer + IG publisher | **8000** | API, carousel rendering, publishing |
+| `instagram_business_db`       | PostgreSQL 18 | **5433** | accounts, settings, history, quotes |
+
+```bash
+# from the project root
+docker compose up -d --build      # build images + start all three
+docker compose logs -f backend    # follow backend logs
+docker compose ps                 # status
+docker compose down               # stop (keeps the DB volume)
+docker compose down -v            # stop AND wipe the Postgres volume
+```
+
+Open **http://localhost:3000**.
+
+**Data & secrets** — mounted at runtime, never baked into images:
+- `.env` — supplies `OPENAI_API_KEY` (+ hosting / legacy IG keys).
+- `.ragskey` — the token-encryption key; must accompany the DB.
+- `posts.db` — mounted read-only as the **one-time migration source**. On first
+  boot, if Postgres is empty, existing accounts/history/quotes are copied in.
+- `images/` — rendered previews, bind-mounted so they persist and are visible on the host.
+
+Postgres is published on host **5433** (container 5432) to avoid clashing with a
+locally-installed Postgres. Connect with:
+`psql -h localhost -p 5433 -U instagram -d instagram_business` (password `instagram`).
 
 ---
 
