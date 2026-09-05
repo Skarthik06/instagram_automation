@@ -84,7 +84,9 @@ def add_account(
     *, label: str, niche: str, ig_business_id: str, ig_access_token: str,
     handle: str = "", is_active: bool = True,
 ) -> Dict[str, Any]:
-    niche = niche if niche in VALID_NICHES else "quotes"
+    # Any non-empty niche is accepted (custom niches like 'affiliate' are allowed);
+    # quotes/news/both keep their special meaning for slide-overlay resolution.
+    niche = (niche or "").strip().lower() or "quotes"
     with connect() as conn:
         cur = conn.cursor()
         cur.execute(
@@ -104,8 +106,8 @@ def update_account(account_id: int, **fields: Any) -> Optional[Dict[str, Any]]:
     for key, value in fields.items():
         if key not in allowed or value is None:
             continue
-        if key == "niche" and value not in VALID_NICHES:
-            continue
+        if key == "niche":
+            value = (str(value).strip().lower() or "quotes")   # accept any custom niche
         if key == "is_active":
             value = int(bool(value))
         # An empty token from the UI means "leave unchanged" (it was masked).
@@ -173,7 +175,9 @@ def get_setting(key: str, default: Optional[str] = None) -> Optional[str]:
         cur.execute("SELECT value FROM app_settings WHERE key = ?", (key,))
         row = cur.fetchone()
     if row is not None:
-        return row["value"]
+        # Secret settings are stored Fernet-encrypted (.ragskey). crypto.decrypt
+        # passes legacy plaintext through unchanged, so old rows still read.
+        return crypto.decrypt(row["value"]) if key in _SECRET_SETTINGS else row["value"]
     return default if default is not None else _DEFAULT_SETTINGS.get(key)
 
 
@@ -181,13 +185,15 @@ def set_setting(key: str, value: str) -> None:
     # Empty value for a secret means "leave unchanged".
     if key in _SECRET_SETTINGS and not str(value).strip():
         return
+    # Encrypt secrets at rest so a DB dump/leak never exposes them without .ragskey.
+    stored = crypto.encrypt(str(value)) if key in _SECRET_SETTINGS else value
     with connect() as conn:
         conn.execute(
             """INSERT INTO app_settings (key, value, updated_at)
                VALUES (?, ?, to_char(now(),'YYYY-MM-DD HH24:MI:SS'))
                ON CONFLICT(key) DO UPDATE SET value = excluded.value,
                                               updated_at = to_char(now(),'YYYY-MM-DD HH24:MI:SS')""",
-            (key, value),
+            (key, stored),
         )
 
 
@@ -227,9 +233,24 @@ def encrypt_legacy_tokens() -> None:
                 )
 
 
+def encrypt_legacy_settings() -> None:
+    """Re-encrypt any secret app_settings (github_token, news_api_key) still stored
+    as plaintext — e.g. rows recovered from an older DB. Idempotent: already-encrypted
+    (`enc:`) values are skipped."""
+    with connect() as conn:
+        cur = conn.cursor()
+        for key in _SECRET_SETTINGS:
+            cur.execute("SELECT value FROM app_settings WHERE key = ?", (key,))
+            row = cur.fetchone()
+            if row and row["value"] and not crypto.is_encrypted(row["value"]):
+                conn.execute("UPDATE app_settings SET value = ? WHERE key = ?",
+                             (crypto.encrypt(row["value"]), key))
+
+
 def seed_from_env() -> None:
     """First-run convenience: migrate a single .env account into rags."""
     init_db()
+    encrypt_legacy_settings()    # encrypt any plaintext secret settings at rest (.ragskey)
     if list_accounts():
         encrypt_legacy_tokens()  # secure any pre-existing plaintext token
         return

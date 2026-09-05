@@ -107,9 +107,9 @@ def _clean_facts(facts: List[Any]) -> List[str]:
 def _slide_html(slide: Dict[str, Any], model: Dict[str, Any], idx: int, total: int,
                 th: Dict[str, str], disp: str, body: str, logo_uri: Optional[str]) -> str:
     img = _data_uri(slide.get("image_source"))
-    _hl = slide.get("headline", "") or ""
-    headline = _esc(_hl[:1].upper() + _hl[1:])       # professional: capitalised headline
-    sub = _esc(slide.get("subheadline", ""))
+    from app.business.textpolish import polish
+    headline = _esc(polish(slide.get("headline", "")))       # proper grammar/capitalisation
+    sub = _esc(polish(slide.get("subheadline", "")))
     template = slide.get("template", "fact")
     facts = _clean_facts(slide.get("facts", []) or [])
     badges = slide.get("badges", []) or []

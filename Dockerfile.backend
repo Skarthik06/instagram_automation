@@ -65,6 +65,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         fonts-noto-core fonts-noto-ui-core \
     && rm -rf /var/lib/apt/lists/*
 
+# ---- rembg (AI background removal) + u2net model, baked in ---------------
+# Deliberately a LATE, self-contained layer: it installs rembg here (NOT via requirements.txt)
+# so the heavy torch/docling/playwright layers above stay cache-valid on rebuild, and it
+# pre-fetches the ~176MB u2net ONNX model at BUILD time so Still Set background-removal works
+# instantly and OFFLINE at runtime — no first-request download, survives any container recreate.
+# `test -f` fails the build loudly if the model didn't bake in, so it can never silently regress.
+RUN pip install --no-cache-dir "rembg==2.0.59" "onnxruntime==1.19.2" \
+    && python -c "from rembg import new_session; new_session('u2net')" \
+    && test -f /root/.u2net/u2net.onnx
+
 # ---- Application code -----------------------------------------------------
 COPY app/ ./app/
 COPY config.json ./config.json

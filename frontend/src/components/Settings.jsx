@@ -20,12 +20,17 @@ function AccountForm({ initial, onSave, onCancel, saving }) {
         <Field label="Handle (@username)" hint="Shown as the overlay on this account's slides">
           <input className="input font-mono" value={f.handle || ''} onChange={set('handle')} placeholder="sparkle06.exe" />
         </Field>
-        <Field label="Niche">
-          <select className="select" value={f.niche} onChange={set('niche')}>
-            <option value="quotes">Quotes</option>
-            <option value="news">News</option>
-            <option value="both">Both</option>
-          </select>
+        <Field label="Niche" hint="Pick a preset or type your own (e.g. affiliate, fashion, tech)">
+          <input className="input" list="niche-options" value={f.niche || ''} onChange={set('niche')} placeholder="e.g. affiliate" />
+          <datalist id="niche-options">
+            <option value="affiliate" />
+            <option value="quotes" />
+            <option value="news" />
+            <option value="both" />
+            <option value="fashion" />
+            <option value="tech" />
+            <option value="lifestyle" />
+          </datalist>
         </Field>
         <Field label="Instagram Business ID"><input className="input font-mono" value={f.ig_business_id} onChange={set('ig_business_id')} placeholder="numeric IG business id" /></Field>
         <Field label="Access Token" hint={editing ? 'Leave blank to keep the current token' : 'Stored locally in the rags DB (git-ignored), never committed'}>

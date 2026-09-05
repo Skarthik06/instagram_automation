@@ -97,7 +97,7 @@ def resolve_structure(carousel_type: str, angle: str) -> str:
             or DEFAULT_STRUCTURE)
 
 
-_MAX_SLIDES = 20                            # Instagram carousel hard cap
+_MAX_SLIDES = 10                            # strict 10-slide post — all content packed into one carousel
 _GALLERY_ASSETS = ["building_interior", "living_room", "bedroom", "kitchen", "balcony",
                    "amenity", "sports", "kids_area", "parking", "landscape",
                    "architectural_render", "building_exterior"]
@@ -121,43 +121,58 @@ def _feature_slot() -> Dict[str, Any]:
     return {"slot": "feature", "role": _P, "assets": list(_GALLERY_ASSETS)}
 
 
+# When the plan must fit a strict cap, which slots survive (lower = keep first).
+# The user's SELECTED enrichments are priority 1, so they always make the cut.
+_SELECT_PRIORITY = {
+    "hero": 0,
+    "location": 1, "connectivity": 1, "schools": 1, "hospitals": 1, "shopping": 1, "metro": 1,
+    "overview": 2, "project_overview": 2, "floor_plan": 2, "amenities": 2, "price_value": 2,
+    "market": 2, "locality": 2,
+    "living_spaces": 3, "bedrooms": 3, "kitchen_bath": 3, "builder_approvals": 3,
+    "builder_trust": 3, "why_invest": 3, "feature": 4,
+}
+# Narrative reading order once the survivors are chosen (property first, context, CTA last).
+_ORDER = {
+    "hero": 0, "overview": 1, "project_overview": 1, "price_value": 2, "living_spaces": 3,
+    "bedrooms": 4, "kitchen_bath": 5, "amenities": 6, "floor_plan": 7, "builder_approvals": 8,
+    "builder_trust": 8, "feature": 12, "location": 20, "connectivity": 21, "schools": 22,
+    "hospitals": 23, "shopping": 24, "market": 25, "locality": 26, "why_invest": 27, "cta": 99,
+}
+
+
 def build_slots(structure: str, real_count: int = 0, min_slides: int = 10,
                 enrichment: Optional[List[str]] = None) -> List[Dict[str, Any]]:
-    """Build the slot plan. Rules:
-      - at least `min_slides` slides,
-      - enough PROPERTY slots that EVERY real PDF image gets its own slide (none missed),
-      - a dedicated CONTEXT slide for every selected data-enrichment (schools, hospitals,
-        malls, metro …) so those choices actually appear — the carousel GROWS past 10,
-      - hero first, CTA last; capped only at Instagram's 20-slide limit.
-    NOT strictly limited to 10 — expands to fit all images + all selected enrichments."""
+    """Compose the slide plan, capped at `_MAX_SLIDES` (strict 10):
+      - hero first, CTA last (always kept),
+      - every SELECTED data-enrichment (schools/hospitals/malls/metro/location) is kept
+        by priority — so the user's choices are analysed INTO the 10, not trimmed off,
+      - remaining room filled by the most important property slots,
+      - survivors ordered narratively (property -> context -> CTA)."""
+    cap = min(max(min_slides, 3), _MAX_SLIDES)
     base = [dict(s) for s in STRUCTURES.get(structure, STRUCTURES[DEFAULT_STRUCTURE])]
-    cta = [s for s in base if s["role"] == _X] or [base[-1]]
-    body = [s for s in base if s["role"] != _X]
+    cta = next((s for s in base if s["role"] == _X), base[-1])
+    hero = base[0]
 
-    # 1) property gallery slots so every real image gets a home (grouped after the
-    #    last property slot of the base structure)
-    prop_slots = sum(1 for s in body if s["role"] == _P)
-    extra_for_images = max(0, real_count - prop_slots)
-    last_p = max((i for i, s in enumerate(body) if s["role"] == _P), default=len(body) - 1)
-    for _ in range(extra_for_images):
-        body.insert(last_p + 1, _feature_slot())
-
-    # 2) one context slide per selected enrichment (dedup against existing slots)
-    existing = {s["slot"] for s in body}
+    # candidate pool = base body (minus hero/cta) + a slide per selected enrichment
+    pool, seen = [], {hero["slot"], cta.get("slot")}
+    for s in base:
+        if s is hero or s.get("role") == _X or s["slot"] in seen:
+            continue
+        pool.append(dict(s)); seen.add(s["slot"])
     for key in (enrichment or []):
         spec = _ENRICHMENT_SLOTS.get(key)
-        if spec and spec["slot"] not in existing:
-            body.append(dict(spec))
-            existing.add(spec["slot"])
+        if spec and spec["slot"] not in seen:
+            pool.append(dict(spec)); seen.add(spec["slot"])
+    # add gallery slots for extra real images (lowest priority — fill only if room)
+    for _ in range(max(0, real_count - sum(1 for s in pool if s.get("role") == _P))):
+        pool.append(_feature_slot())
 
-    # 3) top up to the minimum with gallery slots if still short
-    while len(body) + len(cta) < min_slides:
-        body.insert(last_p + 1, _feature_slot())
-
-    slots = body + cta
-    if len(slots) > _MAX_SLIDES:            # never exceed IG's cap
-        slots = slots[: _MAX_SLIDES - 1] + cta
-    return slots
+    # keep the highest-priority (cap - 2) survivors (hero + cta take 2 slots)
+    pool.sort(key=lambda s: (_SELECT_PRIORITY.get(s["slot"], 3),))
+    chosen = pool[: max(0, cap - 2)]
+    # order the survivors narratively, then bookend with hero + cta
+    chosen.sort(key=lambda s: _ORDER.get(s["slot"], 15))
+    return [hero, *chosen, cta][:cap]
 
 
 _EXCLUDE = ("unknown", "logo", "builder_logo", "document_scan")

@@ -58,7 +58,7 @@ LLM_VERBOSITY = os.getenv("LLM_VERBOSITY", "").strip()
 # ---- Public image hosting (GitHub raw) ----------------------------------
 # Defaults here; can be overridden per-deploy via .env or the rags settings.
 GITHUB_USERNAME = os.getenv("GITHUB_USERNAME", "skarthik06").strip()
-GITHUB_REPO = os.getenv("GITHUB_REPO", "instagram_automation").strip()
+GITHUB_REPO = os.getenv("GITHUB_REPO", "business-sk").strip()   # repo renamed from instagram_automation → business-sk (2026-09-05)
 GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main").strip()
 # Personal-access token to authenticate git pushes for public image hosting at
 # PUBLISH time. Set in .env to enable in-container live publishing.

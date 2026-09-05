@@ -21,15 +21,16 @@ _CDN = "/cdn/business"
 
 
 def _caption_text(cap: Dict[str, Any]) -> str:
+    from app.business.textpolish import polish, polish_caption, bold
     parts = []
     if cap.get("hook"):
-        parts.append(cap["hook"])
+        parts.append(bold(polish(cap["hook"])))          # bold, grammar-fixed hook line
     if cap.get("body"):
-        parts.append(cap["body"])
+        parts.append(polish_caption(cap["body"]))
     if cap.get("key_points"):
-        parts.append("\n".join(f"• {p}" for p in cap["key_points"]))
+        parts.append("\n".join(f"• {polish(p)}" for p in cap["key_points"]))
     if cap.get("cta"):
-        parts.append(cap["cta"])
+        parts.append(polish(cap["cta"]))
     tags = " ".join("#" + re.sub(r"[^a-z0-9]", "", t.lower().lstrip("#"))
                     for t in cap.get("hashtags", []) if t)
     if tags:

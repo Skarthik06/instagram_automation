@@ -598,6 +598,32 @@ def edit_slide(campaign_id: int, index: int, body: SlideEditReq, render: bool = 
     return {"slide": carousel["slides"][index], "rerendered": rerendered, "images": images}
 
 
+class CaptionReq(BaseModel):
+    caption: Optional[str] = None
+    hashtags: Optional[list] = None
+    polish: bool = False           # re-apply grammar/capitalisation + bold hook
+
+
+@router.put("/campaigns/{campaign_id}/caption")
+def edit_caption(campaign_id: int, body: CaptionReq):
+    """Edit the post caption + hashtags (used at publish time)."""
+    camp = store.get_campaign(campaign_id)
+    if not camp:
+        raise HTTPException(404, "Campaign not found")
+    contract = camp.get("contract") or {}
+    if body.caption is not None:
+        text = body.caption
+        if body.polish:
+            from app.business.textpolish import polish_caption
+            text = polish_caption(text)
+        contract["caption"] = text
+    if body.hashtags is not None:
+        clean = [re.sub(r"[^a-z0-9]", "", str(t).lower().lstrip("#")) for t in body.hashtags]
+        contract["hashtags"] = [t for t in clean if t]
+    store.update_campaign(campaign_id, contract=contract)
+    return {"caption": contract.get("caption"), "hashtags": contract.get("hashtags", [])}
+
+
 @router.post("/campaigns/{campaign_id}/slides/{index}/lock")
 def lock_slide(campaign_id: int, index: int):
     from app.business import slides as slidesvc

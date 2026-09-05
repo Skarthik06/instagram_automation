@@ -153,13 +153,26 @@ export default function Business({ notify, onGenerating }) {
   const [pubResult, setPubResult] = useState(null);
   const [insights, setInsights] = useState(null);
   const [editIdx, setEditIdx] = useState(null);       // open Slide Editor at this index
+  const [capDraft, setCapDraft] = useState({ caption: '', hashtags: '' });
+  const [capBusy, setCapBusy] = useState(false);
 
   useEffect(() => {
     if (result) {
       setBlueprint(result.carousel?.slides || []);
       setCampaignImages(result.contract?.carousel?.images || []);
+      setCapDraft({ caption: result.contract?.caption || '', hashtags: (result.contract?.hashtags || []).join(' ') });
     }
   }, [result]);
+
+  const saveCaption = async (polish) => {
+    setCapBusy(true);
+    try {
+      const r = await api.bizEditCaption(cid(), { caption: capDraft.caption, hashtags: capDraft.hashtags.split(/[\s,]+/).filter(Boolean), polish });
+      setCapDraft({ caption: r.caption || '', hashtags: (r.hashtags || []).join(' ') });
+      setResult((res) => ({ ...res, contract: { ...res.contract, caption: r.caption, hashtags: r.hashtags } }));
+      notify(polish ? 'Caption polished & saved' : 'Caption saved');
+    } catch (e) { notify(e?.response?.data?.detail || 'Save failed', 'error'); } finally { setCapBusy(false); }
+  };
 
   const cid = () => result?.persisted?.campaign_id;
   const refreshBlueprint = async () => {
@@ -267,7 +280,7 @@ export default function Business({ notify, onGenerating }) {
     try {
       const r = await api.bizGenerateCampaign({ property_id: extracted.property_id, brief, render: true });
       setResult(r);
-      notify(`Campaign generated — ${r.marketing?.angle}`);
+      notify(`Post #${r.persisted?.campaign_id} generated — ${hum(r.marketing?.angle)}`);
       reload();
     } catch (e) { notify(e?.response?.data?.detail || 'Generation failed', 'error'); }
     finally { setBusy(''); onGenerating?.(false); }
@@ -353,7 +366,7 @@ export default function Business({ notify, onGenerating }) {
                 <button key={p.id} className={cx('chip', extracted?.property_id === p.id && 'on')}
                   style={{ cursor: 'pointer', ...(extracted?.property_id === p.id ? { borderColor: 'var(--accent)', color: 'var(--text)' } : {}) }}
                   onClick={() => loadProperty(p.id)}>
-                  {p.project_name} · {p.campaigns}★ · {p.verdict?.status || '—'}
+                  {p.project_name} · {p.campaigns} post{p.campaigns === 1 ? '' : 's'} · {p.verdict?.status || '—'}
                 </button>
               ))}
             </div>
@@ -471,7 +484,7 @@ export default function Business({ notify, onGenerating }) {
                 )}
               </div>
               <button className="btn btn-accent" onClick={generate} disabled={busy === 'generate'}>
-                {busy === 'generate' ? <><Spinner size={16} /> Generating…</> : <><Icon name="spark" size={16} /> Generate Campaign</>}
+                {busy === 'generate' ? <><Spinner size={16} /> Generating…</> : <><Icon name="spark" size={16} /> Generate Post</>}
               </button>
             </div>
           </div>
@@ -516,19 +529,36 @@ export default function Business({ notify, onGenerating }) {
           </div>
 
           <div className="panel p-4 mb-5 flex flex-wrap items-center justify-between gap-3">
-            <span className="eyebrow">Campaign #{result.persisted?.campaign_id} · {hum(result.brief?.goal)}</span>
+            <span className="eyebrow">Post #{result.persisted?.campaign_id} · {hum(result.brief?.goal)}</span>
             <div className="flex gap-2">
               <button className="btn btn-sm btn-danger" onClick={() => setStatus('REJECTED')}><Icon name="x" size={14} /> Reject</button>
               <button className="btn btn-sm btn-accent" onClick={() => setStatus('AUTO_APPROVED')}><Icon name="check" size={14} /> Approve</button>
             </div>
           </div>
 
-          <Section icon="spark" title="Marketing & caption">
-            <div className="text-sm mb-2" style={{ color: 'var(--muted)' }}>{result.marketing?.angle_rationale}</div>
-            <div className="text-sm" style={{ whiteSpace: 'pre-wrap' }}>{result.contract?.caption}</div>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {(result.contract?.hashtags || []).map((h) => <span key={h} className="chip">#{h}</span>)}
+          <Section icon="spark" title="Caption & hashtags"
+            right={<span className="text-xs font-mono" style={{ color: 'var(--faint)' }}>editable · used at publish</span>}>
+            <div className="text-sm mb-3" style={{ color: 'var(--muted)' }}>{result.marketing?.angle_rationale}</div>
+            <label className="block mb-3">
+              <span className="label">Caption</span>
+              <textarea className="input" rows={8} value={capDraft.caption}
+                onChange={(e) => setCapDraft({ ...capDraft, caption: e.target.value })}
+                style={{ resize: 'vertical', lineHeight: 1.5, fontFamily: 'inherit' }} />
+            </label>
+            <label className="block mb-2">
+              <span className="label">Hashtags (space or comma separated)</span>
+              <input className="input" value={capDraft.hashtags}
+                onChange={(e) => setCapDraft({ ...capDraft, hashtags: e.target.value })}
+                placeholder="realestate 2bhk bengaluru familyhome" />
+            </label>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {capDraft.hashtags.split(/[\s,]+/).filter(Boolean).map((h, k) => <span key={k} className="chip">#{h.replace(/^#/, '')}</span>)}
             </div>
+            <div className="flex gap-2">
+              <button className="btn btn-accent btn-sm" disabled={capBusy} onClick={() => saveCaption(false)}>{capBusy ? <><Spinner size={13} /> Saving…</> : <><Icon name="check" size={13} /> Save caption</>}</button>
+              <button className="btn btn-sm btn-ghost" disabled={capBusy} onClick={() => saveCaption(true)}>Fix grammar &amp; save</button>
+            </div>
+            <p className="text-xs font-mono mt-2" style={{ color: 'var(--faint)' }}>Headlines &amp; captions are auto-capitalised with proper grammar; the hook line renders bold on Instagram.</p>
           </Section>
 
           <Section icon="building" title={`Carousel — ${blueprint.length || result.carousel?.slides?.length || 0} slides`}
