@@ -1,0 +1,29 @@
+# Backend build context — keep it lean and free of secrets/local data.
+venv/
+.venv/
+env/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Frontend deps are huge; the built dist/ is kept so the API's own UI still works.
+frontend/node_modules/
+node_modules/
+
+# Secrets are provided at runtime via env_file / environment — never baked in.
+.env
+.env.*
+!.env.example
+
+# Version control / IDE / OS noise
+.git/
+.gitignore
+.claude/
+*.log
+
+# Local artifacts
+chroma_db/
+*.db
+*.sqlite
+requirements.lock.txt

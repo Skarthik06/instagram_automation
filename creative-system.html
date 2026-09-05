@@ -1,0 +1,803 @@
+<title>The Still Set</title>
+<meta name="description" content="Business-SK's original Instagram creative system: visual identity, 12 rendered templates, multi-product layout logic, caption & hashtag engines, and a zero-cost image pipeline.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap">
+<style>
+:root{
+  --paper:#EDE7DD; --paper-2:#E4DBCC; --card:#F6F2EB; --raise:#FBF8F2;
+  --ink:#221E18; --ink-soft:#5A5245; --ink-faint:#8B8171;
+  --line:#D2C8B6; --line-soft:#E0D7C7;
+  --ember:#B04A32; --ember-ink:#8E3A26;
+  --slate:#45596B;
+  --save:#4C7A4E;
+  --t-fashion:#B04A32; --t-tech:#3E5568; --t-home:#5C6A4B; --t-beauty:#A0566A; --t-deal:#9A6A2E;
+  --shadow:0 1px 2px rgba(34,30,24,.06), 0 12px 30px -18px rgba(34,30,24,.28);
+  --shadow-lift:0 2px 6px rgba(34,30,24,.08), 0 26px 50px -24px rgba(34,30,24,.4);
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --sans:"Hanken Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"Space Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --wrap:1140px;
+}
+:root:not([data-theme="light"]){
+  @media (prefers-color-scheme:dark){
+    --paper:#1A1712; --paper-2:#221D16; --card:#26211A; --raise:#2E281F;
+    --ink:#ECE5D9; --ink-soft:#B4A997; --ink-faint:#877D6C;
+    --line:#3A342A; --line-soft:#312B22;
+    --ember:#D3694D; --ember-ink:#E27C60;
+    --slate:#8CA2B5;
+    --save:#7BA97C;
+    --t-fashion:#D3694D; --t-tech:#7B9BB8; --t-home:#9DAE82; --t-beauty:#CE8296; --t-deal:#CFA05C;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 34px -18px rgba(0,0,0,.7);
+    --shadow-lift:0 2px 8px rgba(0,0,0,.5), 0 30px 60px -24px rgba(0,0,0,.85);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#1A1712; --paper-2:#221D16; --card:#26211A; --raise:#2E281F;
+  --ink:#ECE5D9; --ink-soft:#B4A997; --ink-faint:#877D6C;
+  --line:#3A342A; --line-soft:#312B22;
+  --ember:#D3694D; --ember-ink:#E27C60;
+  --slate:#8CA2B5;
+  --save:#7BA97C;
+  --t-fashion:#D3694D; --t-tech:#7B9BB8; --t-home:#9DAE82; --t-beauty:#CE8296; --t-deal:#CFA05C;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 34px -18px rgba(0,0,0,.7);
+  --shadow-lift:0 2px 8px rgba(0,0,0,.5), 0 30px 60px -24px rgba(0,0,0,.85);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 clamp(18px,4vw,40px);}
+section{padding:clamp(48px,7vw,96px) 0;border-top:1px solid var(--line-soft);}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:400;}
+p{margin:0;}
+a{color:var(--ember-ink);text-decoration-thickness:1px;text-underline-offset:2px;}
+.kick{font-family:var(--mono);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--ink-faint);}
+.serif{font-family:var(--serif);}
+.tnum{font-variant-numeric:tabular-nums;}
+
+/* ---- section headers ---- */
+.sec-head{display:flex;flex-direction:column;gap:14px;margin-bottom:clamp(28px,4vw,48px);max-width:70ch;}
+.sec-head .idx{font-family:var(--mono);font-size:12px;letter-spacing:.2em;color:var(--ember);}
+.sec-head h2{font-family:var(--serif);font-size:clamp(30px,5vw,52px);line-height:1.02;letter-spacing:-.01em;}
+.sec-head p{color:var(--ink-soft);font-size:clamp(15px,1.6vw,18px);}
+
+/* ================= HERO ================= */
+.hero{border-top:none;padding-top:clamp(30px,5vw,60px);}
+.hero-top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+  padding-bottom:clamp(30px,5vw,54px);}
+.brandmark{display:flex;align-items:center;gap:12px;}
+.brandmark .seal{width:34px;height:34px;border:1.5px solid var(--ink);border-radius:50%;
+  display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:700;}
+.brandmark b{font-family:var(--mono);letter-spacing:.16em;font-size:12.5px;text-transform:uppercase;font-weight:700;}
+.hero-frame{border:1px solid var(--line);background:linear-gradient(180deg,var(--raise),var(--card));
+  border-radius:4px;padding:clamp(28px,5vw,64px);position:relative;box-shadow:var(--shadow);overflow:hidden;}
+.hero-frame::before,.hero-frame::after{content:"";position:absolute;width:14px;height:14px;border:1px solid var(--ink-faint);opacity:.5;}
+.hero-frame::before{top:14px;left:14px;border-right:none;border-bottom:none;}
+.hero-frame::after{bottom:14px;right:14px;border-left:none;border-top:none;}
+.hero-frame .placard{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:clamp(20px,4vw,40px);}
+.hero-frame h1{font-family:var(--serif);font-size:clamp(52px,12vw,148px);line-height:.9;letter-spacing:-.02em;}
+.hero-frame h1 em{font-style:italic;color:var(--ember);}
+.hero-lede{margin-top:22px;max-width:60ch;font-size:clamp(16px,1.9vw,21px);color:var(--ink-soft);line-height:1.5;}
+.hero-lede b{color:var(--ink);font-weight:600;}
+.hero-meta{display:flex;gap:26px;flex-wrap:wrap;margin-top:30px;padding-top:26px;border-top:1px solid var(--line);}
+.hero-meta div{display:flex;flex-direction:column;gap:2px;}
+.hero-meta .n{font-family:var(--serif);font-size:28px;line-height:1;}
+.hero-meta .l{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);}
+
+/* ================= generic prose + cards ================= */
+.grid{display:grid;gap:18px;}
+.two{grid-template-columns:repeat(2,1fr);}
+.three{grid-template-columns:repeat(3,1fr);}
+.four{grid-template-columns:repeat(4,1fr);}
+@media(max-width:820px){.two,.three,.four{grid-template-columns:1fr;}}
+.note{border:1px solid var(--line);background:var(--card);border-radius:4px;padding:22px 22px;}
+.note h3{font-size:16px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:9px;}
+.note h3 .tag{font-family:var(--mono);font-size:10px;letter-spacing:.12em;padding:3px 7px;border-radius:3px;}
+.note p{color:var(--ink-soft);font-size:14.5px;}
+.note ul{margin:8px 0 0;padding-left:18px;color:var(--ink-soft);font-size:14.5px;}
+.note li{margin:4px 0;}
+.adopt{background:color-mix(in srgb,var(--save) 8%,var(--card));border-color:color-mix(in srgb,var(--save) 30%,var(--line));}
+.adopt .tag{background:color-mix(in srgb,var(--save) 20%,transparent);color:var(--save);}
+.avoid{background:color-mix(in srgb,var(--ember) 7%,var(--card));border-color:color-mix(in srgb,var(--ember) 26%,var(--line));}
+.avoid .tag{background:color-mix(in srgb,var(--ember) 16%,transparent);color:var(--ember-ink);}
+
+/* ================= identity: palette ================= */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+.sw{border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--card);}
+.sw .chip{height:78px;}
+.sw .meta{padding:9px 11px;display:flex;flex-direction:column;gap:1px;}
+.sw .meta b{font-size:13px;}
+.sw .meta code{font-family:var(--mono);font-size:11px;color:var(--ink-faint);}
+.tintrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+.tintpill{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:100px;padding:7px 14px 7px 8px;background:var(--card);font-size:13px;}
+.tintpill i{width:18px;height:18px;border-radius:50%;display:block;}
+.tintpill code{font-family:var(--mono);font-size:11px;color:var(--ink-faint);}
+
+/* type specimen */
+.spec{border:1px solid var(--line);border-radius:4px;background:var(--card);padding:22px;display:flex;flex-direction:column;gap:6px;}
+.spec .role{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ember);}
+.spec .name{font-size:13px;color:var(--ink-soft);}
+.spec .big{line-height:1;margin-top:6px;}
+
+/* ================= IG TILE (the signature frame) ================= */
+.tiles{display:grid;gap:20px;}
+.tile{position:relative;aspect-ratio:1/1;border:1px solid var(--line);border-radius:5px;
+  background:var(--raise);box-shadow:var(--shadow);overflow:hidden;padding:16px;
+  display:flex;flex-direction:column;--tint:var(--t-fashion);}
+.tile.dealbg{background:linear-gradient(150deg,color-mix(in srgb,var(--tint) 14%,var(--raise)),var(--raise));}
+.tile .frameline{position:absolute;inset:8px;border:1px solid var(--line-soft);border-radius:3px;pointer-events:none;}
+.tile .t-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:2;}
+.tile .t-kick{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--tint);font-weight:700;}
+.tile .t-idx{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint);}
+.tile .t-body{flex:1;display:flex;flex-direction:column;min-height:0;position:relative;z-index:2;}
+
+/* the still-life product field */
+.shot{position:relative;border-radius:3px;background:
+   radial-gradient(120% 90% at 50% 18%, color-mix(in srgb,var(--tint) 10%,#fff6ec) 0%, color-mix(in srgb,var(--tint) 5%,var(--paper-2)) 60%, var(--paper-2) 100%);
+  overflow:hidden;display:grid;place-items:center;}
+:root[data-theme="dark"] .shot,:root:not([data-theme="light"]) .shot{background:
+   radial-gradient(120% 90% at 50% 18%, color-mix(in srgb,var(--tint) 22%,#2c2620) 0%, color-mix(in srgb,var(--tint) 10%,var(--paper-2)) 60%, var(--paper-2) 100%);}
+.shot .obj{width:52%;height:64%;border-radius:10px 10px 40% 40%/10px 10px 22% 22%;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--tint) 42%,var(--card)),color-mix(in srgb,var(--tint) 20%,var(--card)));
+  box-shadow:0 18px 30px -16px color-mix(in srgb,var(--tint) 60%,transparent);}
+.shot .obj.sq{border-radius:8px;width:60%;height:60%;}
+.shot .obj.tall{width:40%;height:78%;border-radius:60px 60px 14px 14px;}
+.shot .glyph{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-family:var(--mono);
+  font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);}
+
+/* price + name lockup */
+.plabel{font-family:var(--serif);line-height:1.02;color:var(--ink);}
+.pmeta{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.price{font-family:var(--sans);font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);}
+.mrp{font-size:.72em;color:var(--ink-faint);text-decoration:line-through;font-variant-numeric:tabular-nums;}
+.off{font-family:var(--mono);font-size:10px;font-weight:700;color:#fff;background:var(--tint);
+  padding:2px 6px;border-radius:3px;letter-spacing:.04em;}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);
+  border-radius:100px;padding:5px 11px;}
+.cta{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9.5px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--ink);border-radius:100px;padding:6px 11px;color:var(--ink);}
+.cta.solid{background:var(--ink);color:var(--paper);}
+.rank{font-family:var(--serif);color:var(--tint);line-height:.8;}
+.rating{font-family:var(--mono);font-size:9px;color:var(--ink-soft);letter-spacing:.05em;}
+
+/* template gallery card wrapper */
+.tpl{border:1px solid var(--line);border-radius:6px;background:var(--card);overflow:hidden;
+  display:flex;flex-direction:column;box-shadow:var(--shadow);}
+.tpl .demo{padding:20px;background:
+   repeating-linear-gradient(45deg,var(--paper-2),var(--paper-2) 10px,transparent 10px,transparent 20px);
+  background-color:var(--paper);border-bottom:1px solid var(--line);}
+.tpl .demo .tile{max-width:300px;margin:0 auto;}
+.tpl .info{padding:18px 20px 20px;display:flex;flex-direction:column;gap:10px;}
+.tpl .info .no{font-family:var(--mono);font-size:11px;color:var(--ember);letter-spacing:.14em;}
+.tpl .info h3{font-family:var(--serif);font-size:23px;}
+.tpl .info .cap{font-size:13.5px;color:var(--ink-soft);}
+.tpl .attrs{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:12.5px;margin-top:4px;}
+.tpl .attrs dt{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);align-self:center;}
+.tpl .attrs dd{margin:0;color:var(--ink-soft);}
+.tpl .best{display:inline-flex;align-self:flex-start;font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;background:color-mix(in srgb,var(--ember) 12%,transparent);color:var(--ember-ink);
+  padding:4px 9px;border-radius:3px;}
+
+/* multi-product layout demos */
+.layouts{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;}
+.lay{border:1px solid var(--line);border-radius:6px;background:var(--card);padding:16px;box-shadow:var(--shadow);}
+.lay h4{font-family:var(--serif);font-size:19px;font-weight:400;margin-bottom:3px;}
+.lay .rule{font-size:12.5px;color:var(--ink-soft);margin-bottom:12px;}
+.mini{aspect-ratio:1/1;border:1px solid var(--line-soft);border-radius:4px;background:var(--raise);
+  padding:9px;display:grid;gap:6px;position:relative;overflow:hidden;}
+.cell{background:radial-gradient(100% 90% at 50% 20%,color-mix(in srgb,var(--t-fashion) 16%,var(--paper-2)),var(--paper-2));
+  border-radius:3px;position:relative;}
+.cell::after{content:attr(data-p);position:absolute;left:6px;bottom:5px;font-family:var(--mono);font-size:7px;
+  letter-spacing:.1em;color:var(--ink-faint);}
+.cell.hero-cell{background:radial-gradient(100% 90% at 50% 20%,color-mix(in srgb,var(--t-fashion) 26%,var(--paper-2)),var(--paper-2));}
+
+/* carousel flow */
+.arc{border:1px solid var(--line);border-radius:6px;background:var(--card);padding:20px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:14px;}
+.arc .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;}
+.arc h3{font-family:var(--serif);font-size:22px;}
+.arc .when{font-size:12.5px;color:var(--ink-soft);max-width:42ch;}
+.slides{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;}
+.slide{flex:0 0 auto;width:118px;border:1px solid var(--line-soft);border-radius:4px;background:var(--raise);
+  padding:10px;display:flex;flex-direction:column;gap:6px;min-height:118px;}
+.slide .sn{font-family:var(--mono);font-size:9px;color:var(--ember);letter-spacing:.12em;}
+.slide .sr{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);}
+.slide .st{font-family:var(--serif);font-size:15px;line-height:1.05;}
+.slide .sd{font-size:11px;color:var(--ink-soft);line-height:1.35;margin-top:auto;}
+
+/* pipeline */
+.pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--card);}
+.step{padding:18px 16px;border-right:1px solid var(--line);position:relative;}
+.step:last-child{border-right:none;}
+.step .n{font-family:var(--mono);font-size:11px;color:var(--ember);}
+.step h4{font-size:14.5px;font-weight:700;margin:6px 0 5px;}
+.step p{font-size:12.5px;color:var(--ink-soft);}
+.step .tool{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:8px;display:block;}
+@media(max-width:820px){.step{border-right:none;border-bottom:1px solid var(--line);}.step:last-child{border-bottom:none;}}
+
+/* caption examples */
+.cap-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+@media(max-width:820px){.cap-grid{grid-template-columns:1fr;}}
+.capx{border:1px solid var(--line);border-radius:6px;background:var(--card);padding:18px;display:flex;flex-direction:column;gap:9px;}
+.capx .a{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ember);}
+.capx .body{font-size:14px;line-height:1.55;white-space:pre-line;}
+.capx .use{font-size:11.5px;color:var(--ink-faint);border-top:1px dashed var(--line);padding-top:8px;}
+
+/* compare */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;}
+@media(max-width:640px){.vs{grid-template-columns:1fr;}}
+.vs>div{padding:18px 20px;}
+.vs .bad{background:color-mix(in srgb,var(--ember) 6%,var(--card));border-right:1px solid var(--line);}
+.vs .good{background:color-mix(in srgb,var(--save) 7%,var(--card));}
+.vs .lab{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:9px;}
+.vs .bad .lab{color:var(--ember-ink);}
+.vs .good .lab{color:var(--save);}
+.vs p{font-size:14px;line-height:1.5;}
+@media(max-width:640px){.vs .bad{border-right:none;border-bottom:1px solid var(--line);}}
+
+/* word banks */
+.banks{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:640px){.banks{grid-template-columns:1fr;}}
+.bank{border:1px solid var(--line);border-radius:6px;padding:18px;background:var(--card);}
+.bank h4{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.bank h4 .d{width:8px;height:8px;border-radius:50%;}
+.words{display:flex;flex-wrap:wrap;gap:7px;}
+.w{font-size:12.5px;padding:5px 10px;border-radius:100px;border:1px solid var(--line);background:var(--raise);}
+.w.pro{border-color:color-mix(in srgb,var(--save) 34%,var(--line));}
+.w.con{border-color:color-mix(in srgb,var(--ember) 30%,var(--line));text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--ember) 60%,transparent);color:var(--ink-soft);}
+
+/* hashtag engine */
+.htg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+.htcard{border:1px solid var(--line);border-radius:6px;background:var(--card);padding:15px 16px;}
+.htcard .hh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;}
+.htcard .hh b{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ember);}
+.htcard .hh span{font-size:11px;color:var(--ink-faint);}
+.htcard p{font-size:12.5px;color:var(--ink-soft);margin-bottom:9px;}
+.tags{display:flex;flex-wrap:wrap;gap:6px;}
+.t{font-family:var(--mono);font-size:11px;color:var(--slate);}
+
+/* QC checklist */
+.qc{columns:2;column-gap:26px;}
+@media(max-width:720px){.qc{columns:1;}}
+.qc .qcg{break-inside:avoid;margin-bottom:22px;border:1px solid var(--line);border-radius:6px;background:var(--card);padding:16px 18px;}
+.qc h4{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ember);margin-bottom:10px;}
+.qc ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.qc li{font-size:13px;color:var(--ink-soft);padding-left:22px;position:relative;}
+.qc li::before{content:"";position:absolute;left:0;top:5px;width:11px;height:11px;border:1.4px solid var(--save);border-radius:3px;}
+.qc li::after{content:"";position:absolute;left:3.5px;top:5px;width:4px;height:7px;border:solid var(--save);border-width:0 1.6px 1.6px 0;transform:rotate(42deg);}
+
+/* tools table */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px;}
+table{border-collapse:collapse;width:100%;min-width:640px;background:var(--card);font-size:13.5px;}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line-soft);vertical-align:top;}
+th{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);
+  background:var(--paper-2);position:sticky;top:0;}
+td b{font-weight:700;}
+td code{font-family:var(--mono);font-size:12px;}
+.badge{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;white-space:nowrap;letter-spacing:.03em;}
+.b-free{background:color-mix(in srgb,var(--save) 18%,transparent);color:var(--save);}
+.b-lim{background:color-mix(in srgb,var(--t-deal) 20%,transparent);color:var(--t-deal);}
+.b-no{background:color-mix(in srgb,var(--ember) 16%,transparent);color:var(--ember-ink);}
+
+/* footer */
+footer{padding:44px 0 70px;color:var(--ink-faint);font-size:12.5px;}
+footer .fx{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:baseline;}
+footer b{font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);font-size:11px;}
+
+/* toggle */
+.themetog{position:fixed;top:14px;right:14px;z-index:50;font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 80%,transparent);
+  backdrop-filter:blur(6px);color:var(--ink-soft);border-radius:100px;padding:7px 13px;cursor:pointer;}
+.themetog:focus-visible{outline:2px solid var(--ember);outline-offset:2px;}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+:focus-visible{outline:2px solid var(--ember);outline-offset:3px;}
+</style>
+
+<button class="themetog" id="tog" aria-label="Toggle light and dark theme">◑ theme</button>
+
+<div class="wrap">
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="hero-top">
+    <div class="brandmark"><span class="seal">SK</span><b>Business&nbsp;·&nbsp;SK</b></div>
+    <div class="kick">Instagram creative system · v1</div>
+  </div>
+  <div class="hero-frame">
+    <div class="placard"><span>Ed. 01 — Fashion & Lifestyle</span><span>Bengaluru · IN</span></div>
+    <h1>The Still<br><em>Set.</em></h1>
+    <p class="hero-lede">A creative operating system for a shopping curator's feed — where the <b>product stays exactly true to source</b> and the <b>design environment does the selling</b>. Built to look hand-curated across any product, any collection, any number of items — and never like a generated affiliate grid.</p>
+    <div class="hero-meta">
+      <div><span class="n serif tnum">12</span><span class="l">Templates</span></div>
+      <div><span class="n serif tnum">1–7+</span><span class="l">Products / post</span></div>
+      <div><span class="n serif tnum">10</span><span class="l">Caption angles</span></div>
+      <div><span class="n serif tnum">₹0</span><span class="l">Ongoing tooling</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= THESIS / REFERENCE READ ================= -->
+<section>
+  <div class="sec-head">
+    <span class="idx">01 — The read</span>
+    <h2>What the references are really saying</h2>
+    <p>Your six saves share one instinct: <em class="serif" style="font-style:italic">restraint reads as premium.</em> The job is to keep that instinct and shed the parts that have become generic-editorial shorthand.</p>
+  </div>
+  <div class="grid two">
+    <div class="note adopt">
+      <h3><span class="tag">Adopt</span>Principles worth keeping</h3>
+      <ul>
+        <li><b>Editorial hierarchy</b> — one big idea per frame, tiny labels, oversized numerals used only where order is real.</li>
+        <li><b>Product-as-still-life</b> — items sit on a calm stage, not a busy collage.</li>
+        <li><b>Quiet commerce</b> — price as a small chip, discount as a controlled mark, CTA as an outlined pill.</li>
+        <li><b>Generous negative space</b> — the frame breathes; nothing touches the edges.</li>
+        <li><b>A repeating frame device</b> that makes every slide recognizably the same author.</li>
+      </ul>
+    </div>
+    <div class="note avoid">
+      <h3><span class="tag">Avoid</span>What now reads as generic</h3>
+      <ul>
+        <li><b>Flat <code>#F4F1EA</code> cream + a serif + terracotta</b> — the single most over-produced "AI editorial" look. We shift the exact hues.</li>
+        <li><b>Lorem-ipsum body blocks</b> — real copy, real prices, always.</li>
+        <li><b>Numbered 01/02/03 as decoration</b> — numerals only when the post is a genuine ranking.</li>
+        <li><b>Uniform rounded cards with one drop shadow</b> stamped everywhere — flattens hierarchy.</li>
+        <li><b>Stock-model dependence</b> — the feed must hold up on plain product shots too.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="grid three" style="margin-top:18px;">
+    <div class="note"><h3>Generic if…</h3><p>Every post is the same layout, same beige, same caption skeleton, mismatched product cut-outs, and a hashtag block copy-pasted post to post.</p></div>
+    <div class="note"><h3>Distinctive when…</h3><p>A constant <b>index frame</b> holds, while tint, template and story arc shift with the collection — one author, many moods.</p></div>
+    <div class="note"><h3>Ownable identity =</h3><p>The placard + tint system + Instrument-Serif/Space-Mono voice. Recognizable in a 3-tile grid glance, before anyone reads a word.</p></div>
+  </div>
+</section>
+
+<!-- ================= VISUAL IDENTITY ================= -->
+<section>
+  <div class="sec-head">
+    <span class="idx">02 — Visual identity</span>
+    <h2>The Still Set, defined</h2>
+    <p>A warm editorial system built on a <b>cool/warm tension</b> most affiliate feeds miss — ember against slate — plus a tint set that lets one identity flex across categories.</p>
+  </div>
+
+  <h3 class="kick" style="margin-bottom:14px;">Core palette</h3>
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:#EDE7DD"></div><div class="meta"><b>Paper</b><code>#EDE7DD</code></div></div>
+    <div class="sw"><div class="chip" style="background:#E4DBCC"></div><div class="meta"><b>Paper Deep</b><code>#E4DBCC</code></div></div>
+    <div class="sw"><div class="chip" style="background:#221E18"></div><div class="meta"><b>Sumi Ink</b><code>#221E18</code></div></div>
+    <div class="sw"><div class="chip" style="background:#B04A32"></div><div class="meta"><b>Ember</b><code>#B04A32</code></div></div>
+    <div class="sw"><div class="chip" style="background:#45596B"></div><div class="meta"><b>Slate</b><code>#45596B</code></div></div>
+    <div class="sw"><div class="chip" style="background:#4C7A4E"></div><div class="meta"><b>Save Green</b><code>#4C7A4E</code></div></div>
+  </div>
+
+  <h3 class="kick" style="margin:26px 0 6px;">Category tint system — one frame, five moods</h3>
+  <p style="color:var(--ink-soft);font-size:14.5px;max-width:64ch;margin-bottom:6px;">The still-life stage and accent inherit a per-collection tint. The placard, type and layout never change — so the feed stays one author while each post feels made for its products.</p>
+  <div class="tintrow">
+    <span class="tintpill"><i style="background:#B04A32"></i>Fashion <code>#B04A32</code></span>
+    <span class="tintpill"><i style="background:#3E5568"></i>Tech <code>#3E5568</code></span>
+    <span class="tintpill"><i style="background:#5C6A4B"></i>Home <code>#5C6A4B</code></span>
+    <span class="tintpill"><i style="background:#A0566A"></i>Beauty <code>#A0566A</code></span>
+    <span class="tintpill"><i style="background:#9A6A2E"></i>Deals <code>#9A6A2E</code></span>
+  </div>
+
+  <h3 class="kick" style="margin:30px 0 14px;">Type — three voices</h3>
+  <div class="grid three">
+    <div class="spec"><span class="role">Display</span><span class="name">Instrument Serif</span><span class="big serif" style="font-size:46px;">Aa Ké</span><span class="big serif" style="font-size:22px;font-style:italic;">the everyday edit</span></div>
+    <div class="spec"><span class="role">UI · Body</span><span class="name">Hanken Grotesk</span><span class="big" style="font-size:34px;font-weight:800;">Aa 24</span><span style="font-size:14px;color:var(--ink-soft)">Readable at 12–18px, warm, humanist. Tabular figures for prices.</span></div>
+    <div class="spec"><span class="role">Utility</span><span class="name">Space Mono</span><span class="big" style="font-family:var(--mono);font-size:22px;letter-spacing:.1em;">₹745 · 85%</span><span style="font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--ink-faint)">THE PLACARD VOICE</span></div>
+  </div>
+
+  <h3 class="kick" style="margin:30px 0 14px;">The signature — an "index frame" on every post</h3>
+  <div class="grid three">
+    <div class="tile" style="--tint:var(--t-fashion)">
+      <div class="frameline"></div>
+      <div class="t-top"><span class="t-kick">Wardrobe / 04</span><span class="t-idx">SK—0925</span></div>
+      <div class="t-body" style="gap:11px;">
+        <div class="shot" style="flex:1;margin-top:11px;"><div class="obj tall"></div><span class="glyph">still · authentic source</span></div>
+        <div>
+          <div class="plabel" style="font-size:19px;">Utility Cargo Pants</div>
+          <div class="pmeta" style="margin-top:5px;"><span class="price" style="font-size:19px;">₹745</span><span class="mrp">₹4,999</span><span class="off">85% OFF</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="note" style="align-self:center;">
+      <h3>Anatomy</h3>
+      <ul>
+        <li><b>Placard kick</b> (top-left, mono) — collection + item index.</li>
+        <li><b>Edition code</b> (top-right) — quiet series marker, ties the feed together.</li>
+        <li><b>Frame hairline</b> — the gallery border; the recognizer.</li>
+        <li><b>Still field</b> — product on a tinted stage, untouched.</li>
+        <li><b>Price lockup</b> — serif name, tabular price, strike-MRP, mono % mark.</li>
+      </ul>
+    </div>
+    <div class="note" style="align-self:center;background:var(--paper-2);">
+      <h3>Why it can't look generic</h3>
+      <p>The frame is <b>constant</b> and the tint is <b>variable</b>. Generic feeds do the opposite — random layouts, one flat colour. Here, a stranger can spot your post in someone else's grid from the placard alone, yet no two collections feel identical.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MULTI-PRODUCT LAYOUT ================= -->
+<section>
+  <div class="sec-head">
+    <span class="idx">03 — Multi-product logic</span>
+    <h2>One to seven, never shrunk to fit</h2>
+    <p>The system chooses a <b>layout family</b> by count, so every product keeps a recognizable size and its own price lockup. More products means a different structure — not smaller thumbnails.</p>
+  </div>
+  <div class="layouts">
+    <div class="lay"><h4>1 — The Hero</h4><p class="rule">Full-bleed still, big serif name, single price lockup. Room to breathe.</p>
+      <div class="mini" style="grid-template-columns:1fr;"><div class="cell hero-cell" data-p="01"></div></div></div>
+    <div class="lay"><h4>2 — The Pair</h4><p class="rule">Split stage or "this vs that". Equal weight, two lockups.</p>
+      <div class="mini" style="grid-template-columns:1fr 1fr;"><div class="cell" data-p="01"></div><div class="cell" data-p="02"></div></div></div>
+    <div class="lay"><h4>3 — The Triptych</h4><p class="rule">One lead + two supports, or an even editorial row of three.</p>
+      <div class="mini" style="grid-template-columns:1.4fr 1fr;grid-template-rows:1fr 1fr;"><div class="cell hero-cell" style="grid-row:span 2" data-p="01"></div><div class="cell" data-p="02"></div><div class="cell" data-p="03"></div></div></div>
+    <div class="lay"><h4>4 — The Quad</h4><p class="rule">Clean 2×2 grid; each cell a full mini-card with price.</p>
+      <div class="mini" style="grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;"><div class="cell" data-p="01"></div><div class="cell" data-p="02"></div><div class="cell" data-p="03"></div><div class="cell" data-p="04"></div></div></div>
+    <div class="lay"><h4>5 — Lead + Rail</h4><p class="rule">One hero, a 2×2 support rail. The "top pick + runners-up" shape.</p>
+      <div class="mini" style="grid-template-columns:1.5fr 1fr 1fr;grid-template-rows:1fr 1fr;"><div class="cell hero-cell" style="grid-row:span 2" data-p="01"></div><div class="cell" data-p="02"></div><div class="cell" data-p="03"></div><div class="cell" data-p="04"></div><div class="cell" data-p="05"></div></div></div>
+    <div class="lay"><h4>6 — The Contact Sheet</h4><p class="rule">Even 3×2 gallery. Reads as a curated set, not a dump.</p>
+      <div class="mini" style="grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;"><div class="cell" data-p="1"></div><div class="cell" data-p="2"></div><div class="cell" data-p="3"></div><div class="cell" data-p="4"></div><div class="cell" data-p="5"></div><div class="cell" data-p="6"></div></div></div>
+    <div class="lay"><h4>7+ — The Index → carousel</h4><p class="rule">A cover contact-sheet, then each product earns its own slide. Never crush 8 into one tile.</p>
+      <div class="mini" style="grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);"><div class="cell hero-cell" style="grid-column:span 3;grid-row:span 1" data-p="cover"></div><div class="cell" data-p="1"></div><div class="cell" data-p="2"></div><div class="cell" data-p="3"></div><div class="cell" data-p="4"></div><div class="cell" data-p="5"></div><div class="cell" data-p="+"></div></div></div>
+  </div>
+  <div class="note" style="margin-top:18px;background:var(--paper-2);"><h3>The rule that prevents the "screenshot grid" look</h3><p>Below 4 products → composed single tiles. At 4–6 → structured grids where each cell is still a full mini-card (name + price). At 7+ → the count triggers a <b>carousel</b> so no single item drops below legible size. The system never solves crowding by shrinking; it solves it by <b>changing structure</b>.</p></div>
+</section>
+
+<!-- ================= TEMPLATES ================= -->
+<section>
+  <div class="sec-head">
+    <span class="idx">04 — The template set</span>
+    <h2>Twelve originals, one family</h2>
+    <p>Each is a distinct visual concept, not a recolour. All inherit the index frame and tint system, so they mix freely in a feed while each carries its own job. Mini-renders below use real sample data.</p>
+  </div>
+  <div class="grid three" id="tplgrid">
+    <!-- T1 Still Hero -->
+    <article class="tpl">
+      <div class="demo"><div class="tile" style="--tint:var(--t-fashion)"><div class="frameline"></div>
+        <div class="t-top"><span class="t-kick">Wardrobe / Hero</span><span class="t-idx">SK—0925</span></div>
+        <div class="t-body" style="gap:10px;"><div class="shot" style="flex:1;margin-top:10px;"><div class="obj tall"></div></div>
+          <div><div class="plabel" style="font-size:18px;">Cotton Cargo Pants</div><div class="pmeta" style="margin-top:4px;"><span class="price" style="font-size:18px;">₹745</span><span class="mrp">₹4,999</span><span class="off">85% OFF</span></div></div></div></div></div>
+      <div class="info"><span class="no">T-01</span><h3>Still Hero</h3><p class="cap">Single product, cinematic. The scroll-stopper opener.</p>
+        <span class="best">Ideal · 1 product</span>
+        <dl class="attrs"><dt>Layout</dt><dd>Full-bleed still, name + price anchored low-left.</dd><dt>Type</dt><dd>Serif name 2×, mono placard, tabular price.</dd><dt>Unique</dt><dd>Most negative space of the set — pure product reverence.</dd></dl></div>
+    </article>
+    <!-- T2 The Pair -->
+    <article class="tpl">
+      <div class="demo"><div class="tile" style="--tint:var(--t-tech)"><div class="frameline"></div>
+        <div class="t-top"><span class="t-kick">Face-off / 02</span><span class="t-idx">SK—0925</span></div>
+        <div class="t-body" style="margin-top:10px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;">
+          <div class="shot"><div class="obj sq"></div></div><div class="shot"><div class="obj sq"></div></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+            <div><div class="plabel" style="font-size:13px;">Noise Buds</div><div class="price tnum" style="font-size:13px;">₹1,299</div></div>
+            <div><div class="plabel" style="font-size:13px;">boAt Rockerz</div><div class="price tnum" style="font-size:13px;">₹1,499</div></div></div></div></div></div>
+      <div class="info"><span class="no">T-02</span><h3>The Face-Off</h3><p class="cap">Two products, equal billing. "Which one's you?"</p>
+        <span class="best">Ideal · 2 products</span>
+        <dl class="attrs"><dt>Layout</dt><dd>Vertical split stage, twin lockups below.</dd><dt>CTA</dt><dd>Comment-driver: "1 or 2?" — engineered for replies.</dd><dt>Unique</dt><dd>Symmetry is the concept; tint divides the two halves.</dd></dl></div>
+    </article>
+    <!-- T3 Ranking -->
+    <article class="tpl">
+      <div class="demo"><div class="tile" style="--tint:var(--t-deal)"><div class="frameline"></div>
+        <div class="t-top"><span class="t-kick">Ranked / Top 3</span><span class="t-idx">SK—0925</span></div>
+        <div class="t-body" style="margin-top:8px;gap:7px;">
+          <div style="display:flex;gap:9px;align-items:center;"><span class="rank" style="font-size:30px;">01</span><div class="shot" style="width:38px;height:38px;flex:0 0 auto;"><div class="obj sq" style="width:64%;height:64%"></div></div><div style="flex:1"><div class="plabel" style="font-size:13px;">Fastrack Watch</div><div class="price tnum" style="font-size:12px;">₹1,795 <span class="off">72%</span></div></div></div>
+          <div style="display:flex;gap:9px;align-items:center;"><span class="rank" style="font-size:30px;opacity:.75">02</span><div class="shot" style="width:38px;height:38px;flex:0 0 auto;"><div class="obj sq" style="width:64%;height:64%"></div></div><div style="flex:1"><div class="plabel" style="font-size:13px;">Fire-Boltt</div><div class="price tnum" style="font-size:12px;">₹1,999 <span class="off">67%</span></div></div></div>
+          <div style="display:flex;gap:9px;align-items:center;"><span class="rank" style="font-size:30px;opacity:.55">03</span><div class="shot" style="width:38px;height:38px;flex:0 0 auto;"><div class="obj sq" style="width:64%;height:64%"></div></div><div style="flex:1"><div class="plabel" style="font-size:13px;">TIMEX Classic</div><div class="price tnum" style="font-size:12px;">₹2,450 <span class="off">45%</span></div></div></div></div></div></div>
+      <div class="info"><span class="no">T-03</span><h3>The Ranking</h3><p class="cap">Numerals earn their place — this is a real ordered list.</p>
+        <span class="best">Ideal · 3–5 products</span>
+        <dl class="attrs"><dt>Layout</dt><dd>Oversized serif rank + thumbnail + lockup rows.</dd><dt>Discount</dt><dd>% mark trails each price; save-green optional.</dd><dt>Unique</dt><dd>Only template that uses big numerals — because order is the content.</dd></dl></div>
+    </article>
+    <!-- T4 Contact Sheet -->
+    <article class="tpl">
+      <div class="demo"><div class="tile" style="--tint:var(--t-fashion)"><div class="frameline"></div>
+        <div class="t-top"><span class="t-kick">The Edit / 06</span><span class="t-idx">SK—0925</span></div>
+        <div class="t-body" style="margin-top:9px;"><div style="display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:6px;flex:1;">
+          <div class="shot"><div class="obj sq" style="width:70%;height:70%"></div></div><div class="shot"><div class="obj sq" style="width:70%;height:70%"></div></div><div class="shot"><div class="obj sq" style="width:70%;height:70%"></div></div>
+          <div class="shot"><div class="obj sq" style="width:70%;height:70%"></div></div><div class="shot"><div class="obj sq" style="width:70%;height:70%"></div></div><div class="shot"><div class="obj sq" style="width:70%;height:70%"></div></div></div>
+          <div class="plabel" style="font-size:14px;margin-top:8px;">Six under ₹999 →</div></div></div></div>
+      <div class="info"><span class="no">T-04</span><h3>Contact Sheet</h3><p class="cap">A curated wall. Reads as taste, not inventory.</p>
+        <span class="best">Ideal · 6 products</span>
+        <dl class="attrs"><dt>Layout</dt><dd>Even 3×2, uniform stages, one shared theme line.</dd><dt>Price</dt><dd>Prices move to the caption or per-slide detail.</dd><dt>Unique</dt><dd>Consistency is the aesthetic — a magazine spread grid.</dd></dl></div>
+    </article>
+    <!-- T5 Deal Drop -->
+    <article class="tpl">
+      <div class="demo"><div class="tile dealbg" style="--tint:var(--t-deal)"><div class="frameline"></div>
+        <div class="t-top"><span class="t-kick">Price Drop</span><span class="t-idx">SK—0925</span></div>
+        <div class="t-body" style="margin-top:8px;justify-content:center;align-items:flex-start;gap:6px;">
+          <div class="shot" style="width:100%;height:52%;"><div class="obj sq"></div></div>
+          <div style="font-family:var(--serif);font-size:15px;">Alan Jones Overshirt</div>
+          <div class="pmeta"><span class="price" style="font-size:26px;">₹599</span><span class="mrp">₹2,199</span></div>
+          <span class="off" style="font-size:12px;padding:3px 9px;">↓ 72% OFF TODAY</span></div></div></div>
+      <div class="info"><span class="no">T-05</span><h3>The Drop</h3><p class="cap">Discount-led, but composed — no shouty starbursts.</p>
+        <span class="best">Ideal · 1–2 products</span>
+        <dl class="attrs"><dt>Layout</dt><dd>Tinted gradient stage; price is the hero, MRP struck.</dd><dt>Discount</dt><dd>The only template where % gets size and colour.</dd><dt>Unique</dt><dd>Urgency through typography, never through clutter.</dd></dl></div>
+    </article>
+    <!-- T6 Editorial Split -->
+    <article class="tpl">
+      <div class="demo"><div class="tile" style="--tint:var(--t-beauty)"><div class="frameline"></div>
+        <div class="t-top"><span class="t-kick">Feature / 01</span><span class="t-idx">SK—0925</span></div>
+        <div class="t-body" style="margin-top:10px;flex-direction:row;gap:10px;align-items:stretch;">
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:7px;"><div class="serif" style="font-size:19px;line-height:1.05;">The one bag that <em style="font-style:italic;color:var(--tint)">goes with everything.</em></div><div class="price tnum" style="font-size:14px;">₹1,149 <span class="mrp">₹3,499</span></div><span class="cta" style="align-self:flex-start;">See why →</span></div>
+          <div class="shot" style="flex:0 0 44%;"><div class="obj tall"></div></div></div></div></div>
+      <div class="info"><span class="no">T-06</span><h3>Editorial Split</h3><p class="cap">Magazine feature: a claim on the left, product on the right.</p>
+        <span class="best">Ideal · 1 product + story</span>
+        <dl class="attrs"><dt>Layout</dt><dd>50/50 text-image; italic serif carries a single idea.</dd><dt>Type</dt><dd>Display serif does the talking; price stays quiet.</dd><dt>Unique</dt><dd>Copy-forward — for hero products with a narrative.</dd></dl></div>
+    </article>
+    <!-- T7 Lead + Rail -->
+    <article class="tpl">
+      <div class="demo"><div class="tile" style="--tint:var(--t-home)"><div class="frameline"></div>
+        <div class="t-top"><span class="t-kick">Top pick + 4</span><span class="t-idx">SK—0925</span></div>
+        <div class="t-body" style="margin-top:9px;flex-direction:row;gap:8px;">
+          <div style="flex:1.4;display:flex;flex-direction:column;gap:5px;"><div class="shot" style="flex:1"><div class="obj sq"></div></div><div class="plabel" style="font-size:12px;">Editor's pick · ₹899</div></div>
+          <div style="flex:1;display:grid;grid-template-rows:repeat(2,1fr);grid-template-columns:1fr 1fr;gap:5px;">
+            <div class="shot"><div class="obj sq" style="width:66%;height:66%"></div></div><div class="shot"><div class="obj sq" style="width:66%;height:66%"></div></div>
+            <div class="shot"><div class="obj sq" style="width:66%;height:66%"></div></div><div class="shot"><div class="obj sq" style="width:66%;height:66%"></div></div></div></div></div></div>
+      <div class="info"><span class="no">T-07</span><h3>Lead &amp; Rail</h3><p class="cap">"My top pick — and four more worth it."</p>
+        <span class="best">Ideal · 5 products</span>
+        <dl class="attrs"><dt>Layout</dt><dd>Hero cell + 2×2 support rail; hero keeps full lockup.</dd><dt>Hierarchy</dt><dd>Size = endorsement; the lead is visibly the winner.</dd><dt>Unique</dt><dd>Encodes a recommendation into the layout itself.</dd></dl></div>
+    </article>
+    <!-- T8 Best Value -->
+    <article class="tpl">
+      <div class="demo"><div class="tile" style="--tint:var(--t-home)"><div class="frameline"></div>
+        <div class="t-top"><span class="t-kick">Value / ₹ per wear</span><span class="t-idx">SK—0925</span></div>
+        <div class="t-body" style="margin-top:9px;justify-content:center;gap:8px;">
+          <div class="shot" style="height:48%"><div class="obj sq"></div></div>
+          <div class="chip" style="align-self:flex-start;"><span class="rating">★ 4.3 · 2,140 ratings</span></div>
+          <div class="plabel" style="font-size:16px;">GRECIILOOKS Co-ord</div>
+          <div class="pmeta"><span class="price" style="font-size:18px;">₹829</span><span class="mrp">₹2,999</span><span class="off">72%</span></div></div></div></div>
+      <div class="info"><span class="no">T-08</span><h3>Best Value</h3><p class="cap">Proof-led: rating + price together build trust fast.</p>
+        <span class="best">Ideal · 1 product</span>
+        <dl class="attrs"><dt>Layout</dt><dd>Rating chip above the lockup — social proof leads.</dd><dt>Rating</dt><dd>Shown only when real; never invented.</dd><dt>Unique</dt><dd>The trust template — numbers do the persuading.</dd></dl></div>
+    </article>
+    <!-- T9 Trend -->
+    <article class="tpl">
+      <div class="demo"><div class="tile" style="--tint:var(--t-fashion)"><div class="frameline"></div>
+        <div class="t-top"><span class="t-kick">In Trend / Fall</span><span class="t-idx">SK—0925</span></div>
+        <div class="t-body" style="margin-top:8px;justify-content:space-between;">
+          <div class="serif" style="font-size:24px;line-height:.98;">5 pieces<br>defining<br><em style="font-style:italic;color:var(--tint)">this season</em></div>
+          <div style="display:flex;gap:6px;"><div class="shot" style="flex:1;height:52px"><div class="obj sq" style="width:70%;height:70%"></div></div><div class="shot" style="flex:1;height:52px"><div class="obj sq" style="width:70%;height:70%"></div></div><div class="shot" style="flex:1;height:52px"><div class="obj sq" style="width:70%;height:70%"></div></div></div></div></div></div>
+      <div class="info"><span class="no">T-09</span><h3>Trend Cover</h3><p class="cap">A carousel opener that promises a themed set.</p>
+        <span class="best">Ideal · cover for 5–7</span>
+        <dl class="attrs"><dt>Layout</dt><dd>Big serif thesis + a teaser strip of what's inside.</dd><dt>Role</dt><dd>Slide 1 of a carousel; sets the season/theme.</dd><dt>Unique</dt><dd>Editorial cover energy — makes people swipe.</dd></dl></div>
+    </article>
+    <!-- T10 Bundle -->
+    <article class="tpl">
+      <div class="demo"><div class="tile" style="--tint:var(--t-home)"><div class="frameline"></div>
+        <div class="t-top"><span class="t-kick">The Kit / 3 pc</span><span class="t-idx">SK—0925</span></div>
+        <div class="t-body" style="margin-top:9px;gap:7px;">
+          <div style="display:flex;gap:6px;flex:1;"><div class="shot" style="flex:1"><div class="obj sq" style="width:70%;height:70%"></div></div><div class="shot" style="flex:1"><div class="obj sq" style="width:70%;height:70%"></div></div><div class="shot" style="flex:1"><div class="obj sq" style="width:70%;height:70%"></div></div></div>
+          <div class="plabel" style="font-size:14px;">The desk-setup kit</div>
+          <div class="pmeta"><span class="rating">all 3 for</span><span class="price" style="font-size:18px;">₹2,140</span></div></div></div></div>
+      <div class="info"><span class="no">T-10</span><h3>The Kit</h3><p class="cap">Complementary products framed as one buy-together set.</p>
+        <span class="best">Ideal · 3 products</span>
+        <dl class="attrs"><dt>Layout</dt><dd>Row of stages + a combined "all three" total.</dd><dt>Truth</dt><dd>Bundle total = sum of real prices; never rounded down.</dd><dt>Unique</dt><dd>Sells a use-case, not just items.</dd></dl></div>
+    </article>
+    <!-- T11 Cart -->
+    <article class="tpl">
+      <div class="demo"><div class="tile" style="--tint:var(--t-beauty)"><div class="frameline"></div>
+        <div class="t-top"><span class="t-kick">What's in my cart</span><span class="t-idx">SK—0925</span></div>
+        <div class="t-body" style="margin-top:8px;flex-direction:row;gap:9px;">
+          <div style="flex:0 0 40%;display:grid;grid-template-columns:1fr 1fr;gap:5px;"><div class="shot"><div class="obj sq" style="width:66%;height:66%"></div></div><div class="shot"><div class="obj sq" style="width:66%;height:66%"></div></div><div class="shot"><div class="obj sq" style="width:66%;height:66%"></div></div><div class="shot"><div class="obj sq" style="width:66%;height:66%"></div></div></div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:4px;"><div class="serif" style="font-size:20px;">What's in<br>my <em style="font-style:italic;color:var(--tint)">cart</em></div><span class="cta" style="align-self:flex-start">Tap to shop →</span></div></div></div></div>
+      <div class="info"><span class="no">T-11</span><h3>The Cart</h3><p class="cap">First-person curator voice — feels like a friend's picks.</p>
+        <span class="best">Ideal · 4 products</span>
+        <dl class="attrs"><dt>Layout</dt><dd>Mini contact grid + a personal headline.</dd><dt>Voice</dt><dd>"my cart / my picks" — human, not brand.</dd><dt>Unique</dt><dd>Personality-led; the anti-catalogue.</dd></dl></div>
+    </article>
+    <!-- T12 Closer -->
+    <article class="tpl">
+      <div class="demo"><div class="tile" style="--tint:var(--t-fashion)"><div class="frameline"></div>
+        <div class="t-top"><span class="t-kick">Shop the set</span><span class="t-idx">SK—0925</span></div>
+        <div class="t-body" style="margin-top:0;justify-content:center;align-items:center;text-align:center;gap:12px;">
+          <div class="serif" style="font-size:22px;line-height:1.05;">Everything here,<br>one link.</div>
+          <span class="cta solid">Link in bio →</span>
+          <span class="rating">@business.sk · new picks weekly</span></div></div></div>
+      <div class="info"><span class="no">T-12</span><h3>The Closer</h3><p class="cap">The final carousel slide — single, unmissable CTA.</p>
+        <span class="best">Ideal · last slide</span>
+        <dl class="attrs"><dt>Layout</dt><dd>Centered, minimal, one action only.</dd><dt>CTA</dt><dd>Solid-ink pill — the one place the button fills.</dd><dt>Unique</dt><dd>Deliberate calm after the pitch; drives the tap.</dd></dl></div>
+    </article>
+  </div>
+</section>
+
+<!-- ================= CAROUSEL STRUCTURES ================= -->
+<section>
+  <div class="sec-head">
+    <span class="idx">05 — Carousel arcs</span>
+    <h2>A swipe should feel like a story</h2>
+    <p>Never "product 1, product 2, product 3." Pick an <b>arc</b> by intent. Each slide has a job; the last always converts.</p>
+  </div>
+  <div class="grid two">
+    <div class="arc"><div class="top"><h3>The Edit</h3><span class="when">Default for a themed collection (5–7 items).</span></div>
+      <div class="slides">
+        <div class="slide"><span class="sn">01</span><span class="sr">Cover</span><span class="st">Trend Cover</span><span class="sd">Big thesis + teaser strip.</span></div>
+        <div class="slide"><span class="sn">02–06</span><span class="sr">Feature</span><span class="st">Still Hero ×5</span><span class="sd">One product per slide, full reverence.</span></div>
+        <div class="slide"><span class="sn">07</span><span class="sr">Proof</span><span class="st">Best Value</span><span class="sd">The rating-backed standout.</span></div>
+        <div class="slide"><span class="sn">08</span><span class="sr">Convert</span><span class="st">The Closer</span><span class="sd">One link, one tap.</span></div>
+      </div></div>
+    <div class="arc"><div class="top"><h3>The Ranking</h3><span class="when">When you can honestly order items — "best to good".</span></div>
+      <div class="slides">
+        <div class="slide"><span class="sn">01</span><span class="sr">Hook</span><span class="st">"I tested 5…"</span><span class="sd">Promise a verdict.</span></div>
+        <div class="slide"><span class="sn">02</span><span class="sr">List</span><span class="st">Ranking 3–5</span><span class="sd">The ordered overview.</span></div>
+        <div class="slide"><span class="sn">03–06</span><span class="sr">Detail</span><span class="st">Still Hero</span><span class="sd">Why each placed where it did.</span></div>
+        <div class="slide"><span class="sn">07</span><span class="sr">Convert</span><span class="st">Closer</span><span class="sd">"#1 link in bio."</span></div>
+      </div></div>
+    <div class="arc"><div class="top"><h3>Problem → Solve</h3><span class="when">For a use-case ("small kitchen", "gym bag").</span></div>
+      <div class="slides">
+        <div class="slide"><span class="sn">01</span><span class="sr">Tension</span><span class="st">The problem</span><span class="sd">A relatable pain, stated plainly.</span></div>
+        <div class="slide"><span class="sn">02</span><span class="sr">Turn</span><span class="st">"Here's the fix"</span><span class="sd">Introduce the set.</span></div>
+        <div class="slide"><span class="sn">03–06</span><span class="sr">Solutions</span><span class="st">Feature / Kit</span><span class="sd">Each product solves a beat.</span></div>
+        <div class="slide"><span class="sn">07</span><span class="sr">Convert</span><span class="st">Closer</span><span class="sd">Shop the whole fix.</span></div>
+      </div></div>
+    <div class="arc"><div class="top"><h3>The Drop</h3><span class="when">Discount event — 1–3 heavily-reduced items.</span></div>
+      <div class="slides">
+        <div class="slide"><span class="sn">01</span><span class="sr">Number</span><span class="st">The Drop</span><span class="sd">Lead with the % and price.</span></div>
+        <div class="slide"><span class="sn">02–03</span><span class="sr">Detail</span><span class="st">Best Value</span><span class="sd">Rating makes the deal credible.</span></div>
+        <div class="slide"><span class="sn">04</span><span class="sr">Convert</span><span class="st">Closer</span><span class="sd">Time-quiet urgency, one link.</span></div>
+      </div></div>
+  </div>
+</section>
+
+<!-- ================= IMAGE PIPELINE ================= -->
+<section>
+  <div class="sec-head">
+    <span class="idx">06 — Image pipeline</span>
+    <h2>Fix the environment, never the product</h2>
+    <p>The hard rule: the product pixels stay <b>true to source</b> — colour, shape, features, branding untouched. Everything we improve is the <em class="serif" style="font-style:italic">stage around it</em>. Every step below is open-source and self-hosted.</p>
+  </div>
+  <div class="pipe">
+    <div class="step"><span class="n">01</span><h4>Normalize</h4><p>Downscale/upscale every source to one working size &amp; square canvas. Consistent input beats varied sources.</p><span class="tool">Pillow · OpenCV</span></div>
+    <div class="step"><span class="n">02</span><h4>Upscale + clean</h4><p>Super-resolution for small/blurry shots; gentle denoise. No feature invention — detail recovery only.</p><span class="tool">Real-ESRGAN · Upscayl</span></div>
+    <div class="step"><span class="n">03</span><h4>Isolate</h4><p>Cut the product from its messy background so it can sit on the branded stage.</p><span class="tool">rembg (U²-Net)</span></div>
+    <div class="step"><span class="n">04</span><h4>Re-stage</h4><p>Place on the tinted still-life field, add ONE consistent soft shadow + padding. This is what unifies mismatched sources.</p><span class="tool">Pillow compositing</span></div>
+    <div class="step"><span class="n">05</span><h4>Render frame</h4><p>Compose the chosen template as HTML, screenshot to a 1080² PNG. Fonts baked in, pixel-perfect, repeatable.</p><span class="tool">Playwright · HTML→PNG</span></div>
+  </div>
+  <div class="grid two" style="margin-top:18px;">
+    <div class="note adopt"><h3><span class="tag">Allowed</span>Environment (design) changes</h3><ul><li>Resolution, sharpness, denoise, straightening.</li><li>Background removal &amp; replacement with the branded stage.</li><li>One consistent shadow, padding, crop-to-square.</li><li>Global light/contrast normalization for consistency.</li></ul></div>
+    <div class="note avoid"><h3><span class="tag">Forbidden</span>Product (truth) changes</h3><ul><li>Recolouring, reshaping, or slimming the item.</li><li>Adding/removing features, logos, or text on the product.</li><li>AI "beautify" that hallucinates detail or patterns.</li><li>Anything that makes it differ from the Amazon source.</li></ul></div>
+  </div>
+  <div class="note" style="margin-top:18px;background:var(--paper-2);"><h3>Consistency across mismatched sources — the one trick</h3><p>Don't try to colour-match ten different photos. Instead, <b>isolate every product and re-stage it on the identical tinted field with the identical shadow</b>. Because the environment is now shared, the products read as one set even when the originals had different backgrounds, lighting and crops. The stage is the great equaliser.</p></div>
+</section>
+
+<!-- ================= CAPTION ENGINE ================= -->
+<section>
+  <div class="sec-head">
+    <span class="idx">07 — Caption engine</span>
+    <h2>Ten angles, one curator's voice</h2>
+    <p>For any collection, the engine can draft from ten stances, then pick the best fit for the products, price story and audience. Examples below are for a real sample set: <b>cargo pants ₹745 (85% off), overshirt ₹599, co-ord ₹829</b>.</p>
+  </div>
+  <div class="cap-grid">
+    <div class="capx"><span class="a">01 · Curiosity</span><div class="body">Found the cargos everyone keeps asking about in my stories. Yes, they're under ₹800. No, they don't look it.</div><div class="use">Use when the hero item is a proven attention-getter.</div></div>
+    <div class="capx"><span class="a">02 · Conversational</span><div class="body">okay so I went looking for one good pair of cargos and left with a whole fit. rating them inside — the ₹599 overshirt is the sleeper.</div><div class="use">Everyday feed; builds the "friend who shops well" persona.</div></div>
+    <div class="capx"><span class="a">03 · Deal-focused</span><div class="body">₹4,999 → ₹745. That's the whole caption. Sizes always go first on these, so this is your heads-up, not a hard sell.</div><div class="use">Genuine steep discount; let the number carry it.</div></div>
+    <div class="capx"><span class="a">04 · Lifestyle</span><div class="body">Cold-morning uniform: roomy cargos, an overshirt you can throw on, done. Three pieces that quietly do most of the work.</div><div class="use">Seasonal / use-case sets; paints the scene.</div></div>
+    <div class="capx"><span class="a">05 · Editorial</span><div class="body">This week's edit is about ease — pieces that look considered but take zero effort. A short list, all under ₹900.</div><div class="use">Themed collections; the curated-magazine tone.</div></div>
+    <div class="capx"><span class="a">06 · Short &amp; punchy</span><div class="body">Three pieces. All under ₹900. Save this one.</div><div class="use">When the visual is strong enough to lead alone.</div></div>
+    <div class="capx"><span class="a">07 · Question-driven</span><div class="body">Would you wear the cargos or play it safe with the co-ord? Genuinely torn — tell me which and I'll do a fit next.</div><div class="use">Engineered for comments; opens a reply loop.</div></div>
+    <div class="capx"><span class="a">08 · Save-worthy</span><div class="body">Bookmark for the next sale scroll: three sub-₹900 basics that don't read cheap. Ratings + links in order below.</div><div class="use">Optimises for saves — the algorithm's favourite signal.</div></div>
+    <div class="capx"><span class="a">09 · Storytelling</span><div class="body">Spent a week trying to build one outfit from budget picks. Three survived the wash test and the mirror test. Here they are.</div><div class="use">Longer dwell time; a mini-narrative before the picks.</div></div>
+    <div class="capx"><span class="a">10 · Unexpected</span><div class="body">The most expensive thing here is ₹829. I keep forgetting that when I wear it. Good design doesn't check your budget.</div><div class="use">A creative angle to break feed monotony.</div></div>
+  </div>
+  <div class="note" style="margin-top:18px;background:var(--paper-2);"><h3>The reusable framework</h3><p><b>Hook</b> (line 1, earns the tap) → <b>Why this set</b> (the through-line: price, theme, or use-case) → <b>The picks</b> (named, with real numbers) → <b>Soft CTA</b> (save / comment / link, one only). Inputs that steer it: product names, count, theme, price band, discount depth, ratings, audience. Rule: <b>rotate the opening structure</b> — never start two consecutive posts the same way.</p></div>
+</section>
+
+<!-- ================= BRAND VOICE ================= -->
+<section>
+  <div class="sec-head">
+    <span class="idx">08 — Brand voice</span>
+    <h2>Sound like a person with taste</h2>
+    <p>Modern, human, a little dry. Confident enough not to hype. The test: could a real curator have written it? If it smells like an ad or an AI, rewrite.</p>
+  </div>
+  <div class="vs">
+    <div class="bad"><div class="lab">✕ Generic AI</div><p>"🔥🔥 Don't miss out on these AMAZING must-have products! Perfect for everyone! Shop now before they're gone!! 🛍️✨ #shopping #deals #musthave"</p></div>
+    <div class="good"><div class="lab">✓ The Still Set</div><p>"Three pieces I'd actually re-buy, all under ₹900. The overshirt's the one to grab first — sizes move fast on these. Links below, in order."</p></div>
+  </div>
+  <div class="grid two" style="margin-top:18px;">
+    <div class="banks" style="grid-template-columns:1fr;">
+      <div class="bank"><h4><span class="d" style="background:var(--save)"></span>Prefer</h4>
+        <div class="words">
+          <span class="w pro">found</span><span class="w pro">the one to grab first</span><span class="w pro">quietly good</span><span class="w pro">worth it</span><span class="w pro">save this</span><span class="w pro">actually</span><span class="w pro">the sleeper pick</span><span class="w pro">under ₹900</span><span class="w pro">₹4,999 → ₹745</span><span class="w pro">tell me which</span><span class="w pro">links in order</span><span class="w pro">doesn't read cheap</span>
+        </div></div>
+    </div>
+    <div class="banks" style="grid-template-columns:1fr;">
+      <div class="bank"><h4><span class="d" style="background:var(--ember)"></span>Avoid</h4>
+        <div class="words">
+          <span class="w con">don't miss out</span><span class="w con">must-have</span><span class="w con">amazing</span><span class="w con">shop now!!</span><span class="w con">perfect for everyone</span><span class="w con">grab yours today</span><span class="w con">🔥🔥🔥</span><span class="w con">limited time only</span><span class="w con">you NEED this</span><span class="w con">game-changer</span><span class="w con">insane deal</span><span class="w con">link in bio 👆👆</span>
+        </div></div>
+    </div>
+  </div>
+  <div class="grid three" style="margin-top:18px;">
+    <div class="note"><h3>Prices &amp; discounts</h3><p>Write prices as figures with the real currency (₹745). Show discounts as a transition (₹4,999 → ₹745) or a clean mark (85% off) — <b>only when true</b>. Never round MRP up to inflate savings.</p></div>
+    <div class="note"><h3>Emoji &amp; punctuation</h3><p>Zero to two emoji, chosen for meaning not decoration. One exclamation mark per caption at most. Lowercase openings are on-brand; ALL CAPS is not.</p></div>
+    <div class="note"><h3>Curiosity &amp; saves</h3><p>Create a gap ("the sleeper pick"), then reward the swipe. Ask one real question for comments. Say "save this" only when the post is genuinely reference-worthy.</p></div>
+  </div>
+</section>
+
+<!-- ================= HASHTAGS ================= -->
+<section>
+  <div class="sec-head">
+    <span class="idx">09 — Hashtag engine</span>
+    <h2>Chosen per post, never pasted</h2>
+    <p>Aim for <b>12–18 tags</b>, mixed across tiers. Pull a rotating subset each time so no two posts share an identical block — the pattern that gets a feed flagged as spam.</p>
+  </div>
+  <div class="htg">
+    <div class="htcard"><div class="hh"><b>Core</b><span>2–3 · fixed-ish</span></div><p>Your identity anchors. Small, stable set.</p><div class="tags"><span class="t">#businesssk</span><span class="t">#curatedfinds</span></div></div>
+    <div class="htcard"><div class="hh"><b>Content</b><span>2–3 · by format</span></div><p>Matches the template/arc used.</p><div class="tags"><span class="t">#thehaul</span><span class="t">#whatsinmycart</span><span class="t">#budgetstyle</span></div></div>
+    <div class="htcard"><div class="hh"><b>Product</b><span>3–4 · exact items</span></div><p>The actual categories in this post only.</p><div class="tags"><span class="t">#cargopants</span><span class="t">#overshirt</span><span class="t">#coordset</span></div></div>
+    <div class="htcard"><div class="hh"><b>Niche</b><span>2–3 · specific</span></div><p>Lower-volume, higher-intent communities.</p><div class="tags"><span class="t">#affordablefashionindia</span><span class="t">#minimalwardrobe</span></div></div>
+    <div class="htcard"><div class="hh"><b>Audience</b><span>1–2</span></div><p>Who it's for, in their words.</p><div class="tags"><span class="t">#genzstyle</span><span class="t">#collegefits</span></div></div>
+    <div class="htcard"><div class="hh"><b>Shopping intent</b><span>1–2</span></div><p>Signals a buyer, not a browser.</p><div class="tags"><span class="t">#amazonfinds</span><span class="t">#amazonfashionindia</span></div></div>
+    <div class="htcard"><div class="hh"><b>Price intent</b><span>1–2 · if real</span></div><p>Only when there's a genuine deal.</p><div class="tags"><span class="t">#under999</span><span class="t">#salealert</span></div></div>
+    <div class="htcard"><div class="hh"><b>Regional</b><span>1–2</span></div><p>India / city context for discovery.</p><div class="tags"><span class="t">#indianfashion</span><span class="t">#bangalore</span></div></div>
+  </div>
+  <div class="note" style="margin-top:18px;background:var(--paper-2);"><h3>Rotation rule</h3><p>Keep Core fixed; draw the rest from each tier's pool by what's <em>actually in the post</em>, then shuffle the selection. Balance <b>broad</b> (#amazonfinds, big reach) with <b>niche</b> (#minimalwardrobe, real engagement) roughly 40/60. Drop any tag unrelated to the products — relevance beats volume every time.</p></div>
+</section>
+
+<!-- ================= QC ================= -->
+<section>
+  <div class="sec-head">
+    <span class="idx">10 — Quality control</span>
+    <h2>The pre-publish gate</h2>
+    <p>Nothing posts until it clears every box. This is the wall between "curated" and "generic affiliate."</p>
+  </div>
+  <div class="qc">
+    <div class="qcg"><h4>Image</h4><ul><li>Product sharp &amp; clearly visible</li><li>No AI distortion or invented detail</li><li>True to the source item</li><li>Balanced spacing, nothing clipped</li><li>Every product individually recognizable</li><li>Consistent stage across all items</li></ul></div>
+    <div class="qcg"><h4>Product info</h4><ul><li>Name matches source exactly</li><li>Price correct</li><li>MRP &amp; discount correct (when shown)</li><li>Rating real (when shown)</li><li>Zero fabricated claims or specs</li></ul></div>
+    <div class="qcg"><h4>Visual design</h4><ul><li>Strong first-frame impression</li><li>Clear hierarchy, one idea per frame</li><li>Index frame + tint applied correctly</li><li>Not overcrowded, not boring</li><li>Doesn't read as AI-generated</li></ul></div>
+    <div class="qcg"><h4>Caption</h4><ul><li>Hook earns the first line</li><li>Human, not promotional</li><li>Different opener from last post</li><li>Accurate numbers, one clear CTA</li><li>Appropriate length, no filler</li></ul></div>
+    <div class="qcg"><h4>Hashtags</h4><ul><li>12–18, relevant to these products</li><li>Broad/niche balanced</li><li>Not identical to a recent post</li><li>No spam or off-topic tags</li></ul></div>
+    <div class="qcg"><h4>Brand consistency</h4><ul><li>Recognizable as one author</li><li>Consistent quality bar</li><li>Not a generic affiliate look</li><li>Nothing copied from a reference</li></ul></div>
+  </div>
+</section>
+
+<!-- ================= ZERO-COST TOOLS ================= -->
+<section>
+  <div class="sec-head">
+    <span class="idx">11 — Zero-cost stack</span>
+    <h2>What's genuinely free — and what only pretends</h2>
+    <p>Honest licensing, checked against how each is actually used here (self-hosted, commercial affiliate output). "Free" below means <b>no ongoing cost for this use</b> — not a trial or credit allowance.</p>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Task</th><th>Tool</th><th>License</th><th>Truly free here?</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Background removal</td><td><b>rembg</b></td><td>MIT (U²-Net models)</td><td><span class="badge b-free">Free</span></td><td>Self-hosted Python; commercial OK. The workhorse for isolation.</td></tr>
+        <tr><td>Super-resolution</td><td><b>Real-ESRGAN</b></td><td>BSD-3</td><td><span class="badge b-free">Free</span></td><td>Self-host; recovers detail without inventing it. Keep strength moderate.</td></tr>
+        <tr><td>Upscale (desktop GUI)</td><td><b>Upscayl</b></td><td>AGPL-3.0</td><td><span class="badge b-free">Free</span></td><td>Bundles ESRGAN models; fine for manual runs. AGPL = fine for internal use.</td></tr>
+        <tr><td>Compositing / staging</td><td><b>Pillow + OpenCV</b></td><td>PIL / Apache-2.0</td><td><span class="badge b-free">Free</span></td><td>Already in your stack. Does normalize, shadow, pad, crop, re-stage.</td></tr>
+        <tr><td>Template → PNG render</td><td><b>Playwright</b></td><td>Apache-2.0</td><td><span class="badge b-free">Free</span></td><td>Already installed. HTML template → 1080² screenshot. Pixel-perfect, repeatable.</td></tr>
+        <tr><td>Manual editing</td><td><b>GIMP · Krita</b></td><td>GPL</td><td><span class="badge b-free">Free</span></td><td>Full editors for one-off fixes. Photopea is browser-based but proprietary/ad-supported.</td></tr>
+        <tr><td>Display fonts</td><td><b>Google Fonts · Fontshare</b></td><td>OFL / free-commercial</td><td><span class="badge b-free">Free</span></td><td>Instrument Serif, Hanken Grotesk, Space Mono all OFL. Fontshare adds Indian-foundry faces, free for commercial use.</td></tr>
+        <tr><td>Lifestyle backgrounds</td><td><b>Unsplash · Pexels</b></td><td>Unsplash / Pexels license</td><td><span class="badge b-free">Free</span></td><td>Commercial use, no attribution required. Don't imply endorsement; avoid identifiable people as "customers."</td></tr>
+        <tr><td>Captions &amp; hashtags</td><td><b>Your gpt-5-nano call</b> / offline templates</td><td>—</td><td><span class="badge b-free">Free*</span></td><td>One structured call you already make; or fully offline template banks for ₹0 API. *Marginal token cost only.</td></tr>
+        <tr><td>All-in-one design GUI</td><td>Canva</td><td>Freemium</td><td><span class="badge b-lim">Limited</span></td><td>Free tier watermarks/limits many premium assets; brand-kit &amp; bulk features are paid. Fine for occasional manual posts, not the pipeline.</td></tr>
+        <tr><td>1-click bg removal (API)</td><td>remove.bg</td><td>Freemium</td><td><span class="badge b-no">Not free</span></td><td>Free tier is low-res / few credits. Use rembg instead for full-res at ₹0.</td></tr>
+        <tr><td>AI upscale (desktop)</td><td>Topaz Photo AI</td><td>Paid</td><td><span class="badge b-no">Not free</span></td><td>Excellent but paid. Real-ESRGAN/Upscayl cover 90% of the need free.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="color:var(--ink-faint);font-size:12.5px;margin-top:12px;">Licensing summarised for this project's use (self-hosted, commercial affiliate content) and can change — verify current terms before relying on any single tool. The whole core pipeline (rembg → Real-ESRGAN → Pillow → Playwright) is genuinely ₹0 ongoing and already sits inside your Python stack.</p>
+</section>
+
+<footer class="wrap">
+  <div class="fx">
+    <span><b>The Still Set</b> · Business-SK Instagram creative system · Ed. 01</span>
+    <span>Product stays true · the design does the selling</span>
+  </div>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var t=document.getElementById('tog');
+  var root=document.documentElement;
+  function cur(){var e=root.getAttribute('data-theme');if(e)return e;
+    return window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}
+  t.addEventListener('click',function(){
+    var next=cur()==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    try{localStorage.setItem('sk-theme',next);}catch(e){}
+  });
+  try{var s=localStorage.getItem('sk-theme');if(s)root.setAttribute('data-theme',s);}catch(e){}
+})();
+</script>

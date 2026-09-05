@@ -1,46 +1,57 @@
-# --- Python ---
-__pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
-venv/
-env/
-build/
-dist/
+# ============================================================================
+# BUSINESS_SK — monorepo (mirrors this folder). Contains instagram_automation/
+# (JK + IG backend) and affiliate-rag-bot/ (SK engine) as sub-folders.
+# GOLDEN RULE: never commit secrets. Real keys live ONLY in .env / .ragskey.
+# ============================================================================
 
-# --- Secrets & local data (NEVER commit to this PUBLIC repo) ---
-# .env holds the OpenAI key; posts.db holds IG access tokens;
-# .ragskey is the encryption key for those tokens. None may ever be committed.
+# ── Secrets — NEVER commit (anywhere in the tree) ───────────────────────────
 .env
+**/.env
 .env.*
 !.env.example
-*.db
-*.sqlite
-*.sqlite3
+!**/.env.example
 .ragskey
+**/.ragskey
+**/*.key
+**/*.pem
+**/secrets.json
+**/*credentials*.json
 
-# --- Node / frontend ---
-node_modules/
-frontend/node_modules/
-frontend/dist/
+# ── Python ──────────────────────────────────────────────────────────────────
+**/venv/
+**/.venv/
+**/env/
+**/__pycache__/
+**/*.py[cod]
+**/*.egg-info/
+**/.pytest_cache/
+**/.mypy_cache/
 
-# --- Logs & temp ---
-*.log
-boot.log
+# ── Node / frontend build ───────────────────────────────────────────────────
+**/node_modules/
+**/dist/
+**/build/
+**/.vite/
+**/*.local
 
-# --- OS ---
+# ── Local databases ─────────────────────────────────────────────────────────
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+
+# ── Generated / bloat (NOT the hosting assets storefront|sk_media|images) ────
+**/images/sk_slides/
+instagram_automation/data-business/
+**/previews/
+scratch_render/
+sk_samples/
+engagement_conversation_full.txt
+**/*.log
+
+# ── OS / editor ─────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
-
-# --- Generated business artifacts & inputs (do NOT commit) ---
-# rendered carousel slides, fetched photos, OSM maps (all generated)
-images/business/
-# generated slide previews
-images/previews/
-# uploaded source documents (inputs; may contain PII)
-data-business/
-# local Claude Code session/agent config
-.claude/
-
-# generated carousel renders (real ones are hosted via API at publish)
-images/sk_slides/
+desktop.ini
+.vscode/
+.idea/
+*.swp

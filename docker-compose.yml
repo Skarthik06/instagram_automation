@@ -1,90 +1,132 @@
 # ===========================================================================
-# Instagram_Business — full stack (frontend + backend + PostgreSQL)
+# BUSINESS_SK — UNIVERSAL stack for BOTH projects on one shared database.
 # ===========================================================================
-#   frontend  : React/Vite built to static, served by nginx (host :3000)
-#   backend   : FastAPI carousel generator + IG publisher   (host :8000)
-#   db        : PostgreSQL 16                                (host :5433)
+#   db                : PostgreSQL 18 + pgvector          (host :5433)
+#                        └─ instagram_business  (IG project)
+#                        └─ affiliate_rag_bot    (affiliate project, + vector ext)
+#   backend           : IG FastAPI carousel generator     (host :8000)
+#   frontend          : IG React/Vite dev server (HMR)     (host :3000)
+#   affiliate_backend : affiliate JSON content API         (host :8100)
 #
 #   Start:  docker compose up -d --build
-#   Logs :  docker compose logs -f backend
-#   Stop :  docker compose down            (add -v to also wipe the DB volume)
+#   Logs :  docker compose logs -f affiliate_backend
+#   Stop :  docker compose down            (containers only — DATA IS KEPT)
+#
+# ---------------------------------------------------------------------------
+#  DATA SAFETY — all app data lives in the named volume `business_sk_pgdata`.
+#  It survives restarts, rebuilds, container deletion, and `docker compose down`.
+#
+#  SAFE (data kept):
+#    - Docker Desktop: Stop / Start / Restart (project or container); rebuild.
+#    - CLI: docker compose down / stop / up / restart.
+#  DESTROYS DATA (never do this unless you truly want a wipe):
+#    - Docker Desktop → Volumes tab → delete `business_sk_pgdata`.
+#    - Docker Desktop → deleting the project WITH "Delete volumes" ticked.
+#    - CLI: docker compose down -v   (the -v wipes volumes).
+#
+#  A one-time backup of the pre-move data is preserved in the old volume
+#  `instagram_business_pgdata` — keep it until you're confident, then delete.
+# ---------------------------------------------------------------------------
 # ===========================================================================
-name: instagram_business
+name: business_sk
 
 services:
   db:
-    image: postgres:18-alpine
-    container_name: instagram_business_db
+    image: pgvector/pgvector:pg18      # Postgres 18 WITH pgvector (affiliate needs it)
+    container_name: business_sk_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: instagram
       POSTGRES_PASSWORD: instagram
-      POSTGRES_DB: instagram_business
+      POSTGRES_DB: instagram_business   # IG db; affiliate_rag_bot added by initdb
     ports:
-      # Host 5433 -> container 5432, so it never clashes with a local Postgres.
       - "5433:5432"
     volumes:
-      # PG18 images store data in a major-version subdir; mount the parent.
+      # PG18 images store data in a major-version subdir — mount the PARENT.
       - pgdata:/var/lib/postgresql
+      - ./initdb:/docker-entrypoint-initdb.d:ro   # creates affiliate_rag_bot + vector ext
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U instagram -d instagram_business"]
       interval: 5s
       timeout: 5s
       retries: 12
 
+  # ── Instagram project ─────────────────────────────────────────────────────
   backend:
     build:
-      context: .
+      context: ./instagram_automation
       dockerfile: Dockerfile.backend
-    container_name: instagram_business_backend
+    container_name: business_sk_ig_backend
     restart: unless-stopped
     env_file:
-      - .env                       # OPENAI_API_KEY, hosting + legacy IG keys
-    # Live-reload: app/ is bind-mounted, so uvicorn --reload picks up edits instantly.
+      - ./instagram_automation/.env      # OPENAI_API_KEY, hosting + legacy IG keys
     command: ["uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8000",
               "--reload", "--reload-dir", "/app/app"]
     environment:
       DATABASE_URL: postgresql://instagram:instagram@db:5432/instagram_business
       LEGACY_SQLITE_DB: /app/legacy/posts.db
-      BUSINESS_USE_DOCLING: "1"    # use Docling as primary extractor (heavy image)
+      BUSINESS_USE_DOCLING: "1"
     volumes:
-      - ./app:/app/app             # live app code (edit -> `compose restart backend`)
-      - docling_cache:/root/.cache # persist Docling/HF model downloads across restarts
-      - ./business:/app/business   # agent charters, schema, benchmarks (docs)
-      - ./data-business:/app/data-business   # source real-estate documents (input)
-      - ./images:/app/images       # rendered previews (persist + visible on host)
-      - ./config.json:/app/config.json   # live overlay/generation tuning
-      - ./.ragskey:/app/.ragskey   # token-encryption key (must match posts.db)
-      - ./posts.db:/app/legacy/posts.db:ro   # one-time SQLite -> Postgres source
+      - ./instagram_automation/app:/app/app
+      - docling_cache:/root/.cache
+      - ./instagram_automation/business:/app/business
+      - ./instagram_automation/data-business:/app/data-business
+      - ./instagram_automation/images:/app/images
+      - ./instagram_automation/config.json:/app/config.json
+      - ./instagram_automation/.ragskey:/app/.ragskey
+      - ./instagram_automation/posts.db:/app/legacy/posts.db:ro
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
 
-  # Live Vite dev server with hot-module-reload (HMR). Source is bind-mounted,
-  # so any edit under frontend/src reflects in the browser instantly — no image
-  # rebuild, no stale cache. (The production nginx build lives in frontend/Dockerfile
-  # for later; run it with `docker compose -f docker-compose.yml -f docker-compose.prod.yml up`.)
   frontend:
     image: node:20-alpine
-    container_name: instagram_business_frontend
+    container_name: business_sk_ig_frontend
     restart: unless-stopped
     working_dir: /app
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 3000"
     environment:
-      # Vite dev proxy forwards /api and /cdn to the backend container.
-      VITE_API_TARGET: http://backend:8000
-      CHOKIDAR_USEPOLLING: "1"   # reliable file-watching on Docker Desktop (Windows)
+      VITE_API_TARGET: http://backend:8000              # /api + /cdn → IG backend
+      VITE_SK_API_TARGET: http://affiliate_backend:8100 # /sk-api → affiliate (Business-SK) API
+      CHOKIDAR_USEPOLLING: "1"
     volumes:
-      - ./frontend:/app                       # live source (HMR)
-      - frontend_node_modules:/app/node_modules  # keep deps out of the bind mount
+      - ./instagram_automation/frontend:/app
+      - ig_frontend_node_modules:/app/node_modules
     ports:
       - "3000:3000"
     depends_on:
       - backend
 
+  # ── Affiliate project (API only — its panel lives in the IG frontend) ─────
+  affiliate_backend:
+    build:
+      context: ./affiliate-rag-bot
+      dockerfile: Dockerfile
+    container_name: business_sk_affiliate_backend
+    restart: unless-stopped
+    env_file:
+      - ./affiliate-rag-bot/.env         # OPENAI_API_KEY, AMAZON_ASSOCIATE_TAG, etc.
+    environment:
+      # Point at the shared db service; overrides the .env DATABASE_URL.
+      DATABASE_URL: postgresql://instagram:instagram@db:5432/affiliate_rag_bot
+      HEADLESS: "true"                    # no display inside the container
+    # Live source mount so the container always runs CURRENT host code (like the IG
+    # backend). Reload picks up edits without a rebuild. The named volume keeps the
+    # container's own /app/__pycache__ from leaking onto the host.
+    volumes:
+      - ./affiliate-rag-bot:/app
+      - hf_cache:/root/.cache/huggingface # persist the embedding model across restarts
+    command: ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8100", "--reload"]
+    ports:
+      - "8100:8100"
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   pgdata:
   docling_cache:
-  frontend_node_modules:
+  ig_frontend_node_modules:
+  hf_cache:

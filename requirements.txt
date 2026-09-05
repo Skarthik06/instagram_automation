@@ -1,40 +1,75 @@
-# Instagram Automation - production dependencies (lean)
-# Install into a virtual environment:
-#   python -m venv venv
-#   venv\Scripts\activate          (Windows)
-#   source venv/bin/activate       (macOS/Linux)
-#   pip install -r requirements.txt
-#   playwright install chromium
+# =============================================================================
+#  BUSINESS_SK — UNIVERSAL dependencies for BOTH projects
+#    • affiliate-rag-bot     (Amazon → Pinterest RAG affiliate content API)
+#    • instagram_automation  (news/quotes → carousel slides → Instagram)
+#
+#  One shared virtualenv at BUSINESS_SK\venv serves both projects.
+#  Target: Python 3.13.
+#
+#  Install:
+#    py -3.13 -m venv venv
+#    venv\Scripts\python.exe -m pip install -r requirements.txt
+#    venv\Scripts\python.exe -m playwright install chromium
+#
+#  Run each project with the shared venv (from its own folder):
+#    affiliate:  ...\affiliate-rag-bot>    ..\..\venv\Scripts\python -m uvicorn server:app --port 8100
+#    instagram:  ...\instagram_automation> ..\..\venv\Scripts\python -m uvicorn app.api:app --port 8000
+#
+#  NOTE: the optional Docling extractor (instagram_automation/requirements-docling.txt)
+#  is intentionally NOT included — it pulls multi-GB models. Add it only if needed.
+# =============================================================================
 
-# --- API server ---
-fastapi==0.128.1
-uvicorn==0.40.0
-pydantic==2.12.2
-python-multipart==0.0.20        # file uploads (business document drag-and-drop)
+# ── Browser automation (both) ────────────────────────────────────────────────
+playwright==1.58.0                  # unified: IG pin, satisfies affiliate >=1.44
 
-# --- LLM (OpenAI gpt-4o-mini) ---
-openai==2.38.0
+# ── Web API server (both) ────────────────────────────────────────────────────
+fastapi==0.128.1                    # unified on IG's newer pin (affiliate works on it)
+uvicorn[standard]==0.40.0           # [standard] adds websockets/httptools (affiliate)
+python-multipart==0.0.20            # file uploads (IG business docs)
+pydantic>=2.12,<3                   # 2.12.x satisfies both projects
 
-# --- Content sourcing ---
-feedparser==6.0.12
+# ── OpenAI (both) ────────────────────────────────────────────────────────────
+openai==2.38.0                      # IG pin; also satisfies langchain-openai
+
+# ── LangChain 0.3 stack (affiliate) ──────────────────────────────────────────
+langchain>=0.3,<0.4
+langchain-core>=0.3,<0.4
+langchain-community>=0.3,<0.4
+langchain-openai>=0.2,<0.4
+langchain-huggingface>=0.1,<0.3     # free local embeddings (all-MiniLM-L6-v2)
+langgraph>=0.2,<0.4
+langsmith>=0.1.82
+
+# ── PostgreSQL + pgvector (both use Postgres) ────────────────────────────────
+langchain-postgres>=0.0.12,<0.1
+pgvector>=0.2.5
+psycopg[binary]>=3.2,<4
+sqlalchemy>=2.0.30,<3
+
+# ── Local embeddings (affiliate; pulls torch) ────────────────────────────────
+sentence-transformers>=3.0,<4
+transformers>=4.46,<5
+numpy>=2.1,<3                        # first line with cp313 wheels; opencv-compatible
+
+# ── Content sourcing ─────────────────────────────────────────────────────────
+feedparser==6.0.12                  # Google News RSS (IG)
 requests==2.32.5
-playwright==1.58.0
+tavily-python>=0.3.3,<0.6           # trend keywords (affiliate)
 
-# --- Image rendering & filtering ---
-pillow>=12.2.0                 # >=12.2 required by pdfplumber (business extraction)
+# ── Image rendering & OCR (IG slide generation) ──────────────────────────────
+pillow>=12.2.0
 opencv-python==4.12.0.88
-numpy            # unpinned: let the resolver match opencv's supported range
-pytesseract==0.3.13
+pytesseract==0.3.13                 # needs the Tesseract binary installed separately
 emoji==2.15.0
 
-# --- Database (PostgreSQL) ---
-psycopg[binary]==3.2.3        # Postgres driver for the containerized DB
+# ── Document extraction (IG business platform) ───────────────────────────────
+pdfplumber==0.11.10
+pypdfium2>=5.9.0
+jsonschema==4.23.0
 
-# --- Real-estate document extraction (business platform, permissive licenses) ---
-pdfplumber==0.11.10           # MIT — layout-aware text + tables + bboxes
-pypdfium2>=5.9.0              # Apache/BSD — page rasterization + image crops (pdfplumber needs >=5.9)
-jsonschema==4.23.0            # deterministic Property Knowledge Model validation
-
-# --- Config & security ---
+# ── Config, security & utils (both) ──────────────────────────────────────────
 python-dotenv==1.2.1
-cryptography==48.0.0          # encrypts IG tokens at rest in the rags store
+cryptography==48.0.0                # encrypts IG tokens at rest
+aiofiles>=23.2.1
+httpx>=0.27,<0.28
+rich>=13.7.1

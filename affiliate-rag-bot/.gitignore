@@ -1,0 +1,47 @@
+# Business-SK affiliate engine — .gitignore
+# GOLDEN RULE: never commit secrets. Real keys live only in .env / .ragskey.
+
+# ── Secrets ─────────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+.ragskey
+**/.ragskey
+rags/.ragskey
+*.key
+*.pem
+secrets.json
+**/*credentials*.json
+
+# ── Python ──────────────────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# ── Node / frontend ─────────────────────────────────────────────────────────
+node_modules/
+**/node_modules/
+dist/
+build/
+.vite/
+*.local
+
+# ── Local data / DBs ────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── OS / editor ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.log
