@@ -51,6 +51,20 @@ export default {
   getBatch: (id) => http.get(`/batch/${id}`).then(data),
   publish: (body) => http.post('/publish', body).then(data),
 
+  // Business-SK — post an affiliate carousel via a selected IG account (token stays server-side).
+  // category + products let the backend attach a post-specific comment→DM automation.
+  skCarousel: (accountId, imageUrls, caption, { category = '', products = [] } = {}) =>
+    http.post('/sk/carousel', { account_id: Number(accountId), image_urls: imageUrls, caption, category, products }).then(data),
+
+  // Business-SK — public storefront (GitHub Pages): one Amazon-tagged page with all products.
+  skStorefrontUrl: () => http.get('/sk/storefront/url').then(data),
+  skPublishStorefront: () => http.post('/sk/storefront/publish').then(data),
+
+  // Business-SK — account profile panel (followers/stories) + Story posting.
+  skAccount: (accountId) => http.get('/sk/account', { params: { account_id: Number(accountId) } }).then(data),
+  skStory: (accountId, mediaUrl, isVideo = false) =>
+    http.post('/sk/story', { account_id: Number(accountId), media_url: mediaUrl, is_video: isVideo }).then(data),
+
   // news preview
   getNews: (topic) => http.get('/news', { params: topic ? { topic } : {} }).then(data),
 
@@ -92,6 +106,50 @@ export default {
   v1Schedules: () => http.get('/v1/schedules').then((r) => r.data.data),
   bizBlueprint: (cid) => http.get(`/business/campaigns/${cid}/blueprint`).then(data),
   bizEditSlide: (cid, i, body, render = true) => http.put(`/business/campaigns/${cid}/slides/${i}?render=${render}`, body).then(data),
+  bizEditCaption: (cid, body) => http.put(`/business/campaigns/${cid}/caption`, body).then(data),
+  // engagement automation platform
+  engAutomations: (accountId) => http.get(`/engagement/automations?account_id=${accountId}`).then(data),
+  engCreate: (accountId, body) => http.post(`/engagement/automations?account_id=${accountId}`, body).then(data),
+  engUpdate: (accountId, id, body) => http.patch(`/engagement/automations/${id}?account_id=${accountId}`, body).then(data),
+  engDelete: (accountId, id) => http.delete(`/engagement/automations/${id}?account_id=${accountId}`).then(data),
+  engStats: (accountId) => http.get(`/engagement/automations/stats?account_id=${accountId}`).then(data),
+  engSimulate: (body) => http.post('/engagement/simulate', body).then(data),
+  engSuggest: (propertyId, kind = 'dm') => http.get(`/engagement/suggest-message`, { params: { property_id: propertyId, kind } }).then(data),
+  engSummary: (accountId) => http.get(`/engagement/summary`, { params: { account_id: accountId } }).then(data),
+  engActivity: (accountId, limit = 50) => http.get(`/engagement/activity`, { params: { account_id: accountId, limit } }).then(data),
+  engConversations: (accountId) => http.get(`/engagement/conversations`, { params: { account_id: accountId } }).then(data),
+  engMessages: (conversationId) => http.get(`/engagement/conversations/${conversationId}/messages`).then(data),
+  engComments: (accountId, postId) => http.get(`/engagement/comments`, { params: { account_id: accountId, ...(postId ? { post_id: postId } : {}) } }).then(data),
+  engPosts: (accountId) => http.get(`/engagement/posts`, { params: { account_id: accountId } }).then(data),
+  engPostDetail: (accountId, campaignId) => http.get(`/engagement/posts/${campaignId}`, { params: { account_id: accountId } }).then(data),
+  engSyncPost: (accountId, campaignId, runRules = false) => http.post(`/engagement/posts/${campaignId}/sync`, { account_id: Number(accountId), run_rules: runRules }).then(data),
+  engSyncAll: (accountId, runRules = true) => http.post(`/engagement/sync-all`, { account_id: Number(accountId), run_rules: runRules }).then(data),
+  engSyncStatus: (accountId) => http.get(`/engagement/sync-status`, { params: { account_id: accountId } }).then(data),
+  engCharts: (accountId, days = 7) => http.get(`/engagement/charts`, { params: { account_id: accountId, days } }).then(data),
+  engTopPosts: (accountId, limit = 5) => http.get(`/engagement/top-posts`, { params: { account_id: accountId, limit } }).then(data),
+  // automation detail actions
+  engAutoToggle: (accountId, id) => http.patch(`/engagement/automations/${id}/toggle`, null, { params: { account_id: accountId } }).then(data),
+  engAutoDuplicate: (accountId, id) => http.post(`/engagement/automations/${id}/duplicate`, null, { params: { account_id: accountId } }).then(data),
+  engAutoTest: (accountId, id, body) => http.post(`/engagement/automations/${id}/test`, body, { params: { account_id: accountId } }).then(data),
+  engAutoExecutions: (accountId, id) => http.get(`/engagement/automations/${id}/executions`, { params: { account_id: accountId } }).then(data),
+  // leads
+  engLeads: (accountId, status) => http.get(`/engagement/leads`, { params: { account_id: accountId, ...(status ? { status } : {}) } }).then(data),
+  engLead: (accountId, id) => http.get(`/engagement/leads/${id}`, { params: { account_id: accountId } }).then(data),
+  engLeadStatus: (accountId, id, status, note) => http.patch(`/engagement/leads/${id}/status`, { status, note }, { params: { account_id: accountId } }).then(data),
+  // comment moderation
+  engCommentReply: (accountId, pk, message) => http.post(`/engagement/comments/${pk}/reply`, { account_id: Number(accountId), message }).then(data),
+  engCommentHide: (accountId, pk, hidden) => http.patch(`/engagement/comments/${pk}/hide`, { hidden }, { params: { account_id: accountId } }).then(data),
+  engCommentRead: (accountId, pk) => http.patch(`/engagement/comments/${pk}/read`, null, { params: { account_id: accountId } }).then(data),
+  // conversation management
+  engConvStatus: (accountId, id, status) => http.patch(`/engagement/conversations/${id}/status`, { status }, { params: { account_id: accountId } }).then(data),
+  engConvRead: (accountId, id) => http.patch(`/engagement/conversations/${id}/read`, null, { params: { account_id: accountId } }).then(data),
+  engConvSend: (accountId, id, message) => http.post(`/engagement/conversations/${id}/messages`, { account_id: Number(accountId), message }).then(data),
+  engConvUnread: (accountId) => http.get(`/engagement/conversations/unread/count`, { params: { account_id: accountId } }).then(data),
+  // events + webhook admin
+  engEvents: (accountId, status) => http.get(`/engagement/events`, { params: { account_id: accountId, ...(status ? { status } : {}) } }).then(data),
+  engEventsFailed: (accountId) => http.get(`/engagement/events/failed`, { params: { account_id: accountId } }).then(data),
+  engEventsRetry: (accountId) => http.post(`/engagement/events/failed/retry`, null, { params: { account_id: accountId } }).then(data),
+  engWebhookStatus: (accountId) => http.get(`/engagement/webhook-status`, { params: { account_id: accountId } }).then(data),
   bizCustomGenerate: (body) => http.post('/business/custom/generate', body).then(data),
   bizCustomUpload: (files) => {
     const fd = new FormData();

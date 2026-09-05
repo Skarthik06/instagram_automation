@@ -41,3 +41,6 @@ images/previews/
 data-business/
 # local Claude Code session/agent config
 .claude/
+
+# generated carousel renders (real ones are hosted via API at publish)
+images/sk_slides/

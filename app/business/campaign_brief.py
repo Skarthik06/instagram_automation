@@ -70,7 +70,7 @@ class CampaignBrief(BaseModel):
     target_audience: str = "ai_recommended"
     content_angle: str = "ai_recommended"
     carousel_type: str = "ai_recommended"
-    slide_count: int = Field(default=10, ge=4, le=20)
+    slide_count: int = Field(default=10, ge=4, le=10)
     language: str = "english"
     tone: str = "premium"
     content_density: str = "balanced"
@@ -109,7 +109,7 @@ def options() -> Dict[str, Any]:
         "content_density": DENSITIES, "language": LANGUAGES, "image_policy": IMAGE_POLICIES,
         "claim_policy": CLAIM_POLICIES, "cta_objective": CTA_OBJECTIVES,
         "contact_method": CONTACT_METHODS, "generation_mode": GENERATION_MODES,
-        "data_enrichment": ENRICHMENTS, "slide_count": list(range(4, 21)),
+        "data_enrichment": ENRICHMENTS, "slide_count": list(range(4, 11)),
     }
 
 

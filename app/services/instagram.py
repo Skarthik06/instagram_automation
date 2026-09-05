@@ -99,6 +99,119 @@ def _permalink(media_id: str, token: str) -> Optional[str]:
         return None
 
 
+def resolve_page_token(token: str, ig_business_id: str) -> str:
+    """Return the PAGE access token for the Facebook Page connected to this IG business
+    account. Instagram messaging (comment→DM) and publishing must use the PAGE token, not the
+    User token — a User token gives '(#3) capability' / 'Object me does not exist' on
+    /messages. If `token` is already a page token or resolution fails, the original is returned
+    unchanged (so nothing breaks)."""
+    ig = str(ig_business_id or "").strip()
+    if _looks_like_placeholder(token) or not ig:
+        return token
+    try:
+        r = requests.get(f"{GRAPH}/me/accounts",
+                         params={"fields": "id,access_token,instagram_business_account",
+                                 "access_token": token}, timeout=20)
+        for pg in (r.json() or {}).get("data", []):
+            iba = (pg.get("instagram_business_account") or {}).get("id")
+            if iba and str(iba) == ig and pg.get("access_token"):
+                return pg["access_token"]                 # the Page token — what messaging needs
+    except Exception:
+        pass
+    return token
+
+
+def account_info(account: Dict) -> Dict:
+    """Public profile metrics for the account's right-side panel: username, name,
+    followers/following/posts counts, avatar, bio. Returns {} on any error (never raises)."""
+    ig_id = str(account.get("ig_business_id") or "")
+    token = account.get("ig_access_token") or ""
+    if not ig_id.isdigit() or _looks_like_placeholder(token):
+        return {}
+    try:
+        r = requests.get(f"{GRAPH}/{ig_id}", params={
+            "fields": "username,name,followers_count,follows_count,media_count,profile_picture_url,biography,website",
+            "access_token": token}, timeout=15)
+        d = r.json()
+        if isinstance(d, dict) and "error" in d:
+            return {"_error": str(d["error"].get("message", "unavailable"))[:300]}
+        return d if isinstance(d, dict) else {}
+    except Exception as e:
+        return {"_error": str(e)[:200]}
+
+
+def list_stories(account: Dict) -> List[Dict]:
+    """Active Stories (last 24h) for the account — the /stories edge. [] on error.
+    NOTE: Highlights are deliberately absent — the Graph API exposes NO Highlights edge."""
+    ig_id = str(account.get("ig_business_id") or "")
+    token = account.get("ig_access_token") or ""
+    if not ig_id.isdigit() or _looks_like_placeholder(token):
+        return []
+    try:
+        r = requests.get(f"{GRAPH}/{ig_id}/stories", params={
+            "fields": "id,media_type,media_url,thumbnail_url,permalink,timestamp",
+            "access_token": token}, timeout=15)
+        d = r.json()
+        return d.get("data", []) if isinstance(d, dict) else []
+    except Exception:
+        return []
+
+
+def _wait_ready(creation_id: str, token: str, tries: int = 20, delay: float = 2.0) -> None:
+    """Poll a media container's status_code until FINISHED before publishing. Instagram
+    processes containers (esp. carousels / re-hosted images) asynchronously; publishing too
+    early yields Graph error 2207027 'media not ready'. Best-effort: on ERROR raise, otherwise
+    proceed after the last try (publish will surface a real error if still not ready)."""
+    import time as _t
+    for _ in range(tries):
+        try:
+            st = requests.get(f"{GRAPH}/{creation_id}",
+                              params={"fields": "status_code", "access_token": token}, timeout=15).json()
+        except Exception:
+            st = {}
+        code = st.get("status_code")
+        if code == "FINISHED":
+            return
+        if code == "ERROR":
+            raise InstagramError("Instagram could not process the media (check the image URL is public + valid).")
+        _t.sleep(delay)
+
+
+def _publish_container(ig_id: str, creation_id: str, token: str) -> Dict:
+    """Publish a ready container, retrying briefly on the transient 'media not ready' error."""
+    import time as _t
+    for attempt in range(6):
+        try:
+            return _post(f"{GRAPH}/{ig_id}/media_publish",
+                         {"creation_id": creation_id, "access_token": token})
+        except InstagramError as e:
+            if "2207027" in str(e) or "not ready" in str(e).lower():
+                _t.sleep(3)                       # still processing — wait and retry
+                continue
+            raise
+    # final attempt (let the real error surface)
+    return _post(f"{GRAPH}/{ig_id}/media_publish", {"creation_id": creation_id, "access_token": token})
+
+
+def publish_story(account: Dict, media_url: str, is_video: bool = False) -> Dict:
+    """Publish a single-media STORY (image or video) to the account. Graph API supports
+    Stories via media_type=STORIES for Business/Creator accounts. Instagram-catalog music
+    CANNOT be attached via API — only audio already baked into an uploaded video counts."""
+    _validate(account)
+    if not media_url:
+        raise InstagramError("No media URL for the story.")
+    ig_id = account["ig_business_id"]
+    token = account["ig_access_token"]
+    field = "video_url" if is_video else "image_url"
+    created = _post(f"{GRAPH}/{ig_id}/media",
+                    {"media_type": "STORIES", field: media_url, "access_token": token})
+    creation_id = created["id"]
+    _wait_ready(creation_id, token)                       # wait for processing (image or video)
+    published = _publish_container(ig_id, creation_id, token)
+    media_id = published["id"]
+    return {"ig_media_id": media_id, "permalink": _permalink(media_id, token), "media_type": "story"}
+
+
 def publish(account: Dict, image_urls: List[str], caption: str) -> Dict:
     """Publish a post to `account`. Carousel if >1 image, else a single image.
 
@@ -116,14 +229,15 @@ def publish(account: Dict, image_urls: List[str], caption: str) -> Dict:
             f"{GRAPH}/{ig_id}/media",
             {"image_url": image_urls[0], "caption": caption, "access_token": token},
         )
-        published = _post(
-            f"{GRAPH}/{ig_id}/media_publish",
-            {"creation_id": created["id"], "access_token": token},
-        )
+        _wait_ready(created["id"], token)                 # let Instagram fetch + process it
+        published = _publish_container(ig_id, created["id"], token)
         media_id = published["id"]
         return {"ig_media_id": media_id, "permalink": _permalink(media_id, token), "media_type": "image"}
 
     # --- carousel ---
+    # Create all children first (they process in parallel on Instagram's side — NO per-child
+    # wait, that was the slow part). We only wait for the CAROUSEL CONTAINER to be FINISHED,
+    # which already requires every child to be processed. This is ~5x faster.
     child_ids: List[str] = []
     for url in image_urls:
         child = _post(
@@ -141,9 +255,7 @@ def publish(account: Dict, image_urls: List[str], caption: str) -> Dict:
             "access_token": token,
         },
     )
-    published = _post(
-        f"{GRAPH}/{ig_id}/media_publish",
-        {"creation_id": container["id"], "access_token": token},
-    )
+    _wait_ready(container["id"], token)                   # one wait for the whole carousel
+    published = _publish_container(ig_id, container["id"], token)
     media_id = published["id"]
     return {"ig_media_id": media_id, "permalink": _permalink(media_id, token), "media_type": "carousel"}

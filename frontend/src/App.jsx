@@ -16,25 +16,58 @@ import AdminSettings from './components/AdminSettings';
 import Leads from './components/Leads';
 import Calendar from './components/Calendar';
 import CustomPoster from './components/CustomPoster';
+import Engagement from './components/Engagement';
+import Placeholder from './components/Placeholder';
+import BusinessSK from './components/BusinessSK';
 
-const NAV = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'studio' },
-  { id: 'business', label: 'Business', icon: 'building' },
-  { id: 'custom', label: 'Custom Poster', icon: 'edit' },
-  { id: 'properties', label: 'Properties', icon: 'doc' },
-  { id: 'media', label: 'Media Library', icon: 'quote' },
-  { id: 'templates', label: 'Templates', icon: 'edit' },
-  { id: 'analytics', label: 'Analytics', icon: 'history' },
-  { id: 'leads', label: 'Leads', icon: 'bolt' },
-  { id: 'calendar', label: 'Calendar', icon: 'news' },
-  { id: 'integrations', label: 'Integrations', icon: 'ext' },
+// Two business workspaces, each a collapsible dropdown group in the sidebar.
+//   Business-JK → the real-estate Instagram platform (all existing panels)
+//   Business-SK → the affiliate business (frontend built later; API is live)
+const NAV_GROUPS = [
+  {
+    id: 'jk', label: 'Business-JK', icon: 'building',
+    items: [
+      { id: 'dashboard', label: 'Dashboard', icon: 'studio' },
+      { id: 'business', label: 'Business', icon: 'building' },
+      { id: 'engagement', label: 'Engagement', icon: 'bolt' },
+      { id: 'custom', label: 'Custom Poster', icon: 'edit' },
+      { id: 'properties', label: 'Properties', icon: 'doc' },
+      { id: 'media', label: 'Media Library', icon: 'quote' },
+      { id: 'templates', label: 'Templates', icon: 'edit' },
+      { id: 'analytics', label: 'Analytics', icon: 'history' },
+      { id: 'leads', label: 'Leads', icon: 'bolt' },
+      { id: 'calendar', label: 'Calendar', icon: 'news' },
+      { id: 'integrations', label: 'Integrations', icon: 'ext' },
+      { id: 'admin', label: 'Admin', icon: 'shield' },
+    ],
+  },
+  {
+    id: 'sk', label: 'Business-SK', icon: 'spark',
+    items: [
+      { id: 'sk-affiliate', label: 'Affiliate', icon: 'spark' },
+      { id: 'sk-post', label: 'Post to IG', icon: 'pin' },
+      { id: 'sk-storefront', label: 'Storefront', icon: 'ext' },
+      { id: 'sk-history', label: 'History', icon: 'history' },
+      { id: 'sk-engagement', label: 'Engagement', icon: 'bolt' },
+    ],
+  },
+];
+
+// Universal panels — shared across BOTH businesses (account tokens, API keys,
+// personal studio). They live OUTSIDE the Business-JK / Business-SK groups.
+const UNIVERSAL = [
   { id: 'accounts', label: 'Accounts', icon: 'spark' },
   { id: 'settings', label: 'Settings', icon: 'settings' },
   { id: 'studio', label: 'Personal', icon: 'quote' },
 ];
 
+// Flat list (used by the compact mobile bar).
+const NAV = [...NAV_GROUPS.flatMap((g) => g.items), ...UNIVERSAL];
+
 export default function App() {
   const [view, setView] = useState('dashboard');
+  const [openGroups, setOpenGroups] = useState({ jk: true, sk: true });
+  const toggleGroup = (id) => setOpenGroups((g) => ({ ...g, [id]: !g[id] }));
   const [accounts, setAccounts] = useState([]);
   const [settings, setSettings] = useState(null);
   const [health, setHealth] = useState(null);
@@ -98,13 +131,48 @@ export default function App() {
           </div>
         </div>
 
-        <nav className="space-y-1.5 flex-1">
-          {NAV.map((n) => (
-            <div key={n.id} className={cx('nav-item', view === n.id && 'active')} onClick={() => setView(n.id)}>
-              <Icon name={n.icon} size={18} /> {n.label}
-              <span className="nav-dot" />
+        <nav className="space-y-2 flex-1 overflow-y-auto">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.id}>
+              <div onClick={() => toggleGroup(group.id)}
+                style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px',
+                         cursor: 'pointer', userSelect: 'none', borderRadius: 10, fontWeight: 600,
+                         letterSpacing: '.01em', color: 'var(--text)' }}>
+                <Icon name={group.icon} size={18} />
+                <span style={{ flex: 1 }}>{group.label}</span>
+                <span style={{ display: 'inline-flex', color: 'var(--muted)', transition: 'transform .15s',
+                               transform: openGroups[group.id] ? 'rotate(90deg)' : 'none' }}>
+                  <Icon name="chevR" size={14} />
+                </span>
+              </div>
+              {openGroups[group.id] && (
+                <div className="space-y-1 mt-1" style={{ marginLeft: 11, paddingLeft: 9,
+                     borderLeft: '1px solid var(--border)' }}>
+                  {group.items.map((n) => (
+                    <div key={n.id} className={cx('nav-item', view === n.id && 'active')}
+                      onClick={() => setView(n.id)}>
+                      <Icon name={n.icon} size={16} /> {n.label}
+                      <span className="nav-dot" />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
+
+          {/* Universal — shared across both businesses (tokens / API / personal) */}
+          <div className="space-y-1" style={{ marginTop: 12, paddingTop: 12,
+               borderTop: '1px solid var(--border)' }}>
+            <div className="eyebrow" style={{ padding: '0 10px 4px', fontSize: '0.52rem',
+                 color: 'var(--faint)' }}>Universal</div>
+            {UNIVERSAL.map((n) => (
+              <div key={n.id} className={cx('nav-item', view === n.id && 'active')}
+                onClick={() => setView(n.id)}>
+                <Icon name={n.icon} size={18} /> {n.label}
+                <span className="nav-dot" />
+              </div>
+            ))}
+          </div>
         </nav>
 
         <div className="panel p-3.5 mt-4 text-xs space-y-2 font-mono" style={{ color: 'var(--muted)' }}>
@@ -141,6 +209,7 @@ export default function App() {
             <Business notify={notify} onGenerating={setGenerating} />
           </div>
           {view === 'dashboard' && <Dashboard notify={notify} go={setView} />}
+          {view === 'engagement' && <Engagement notify={notify} />}
           {view === 'custom' && <CustomPoster notify={notify} />}
           {view === 'properties' && <Properties notify={notify} />}
           {view === 'media' && <MediaLibrary notify={notify} />}
@@ -150,9 +219,26 @@ export default function App() {
           {view === 'calendar' && <Calendar notify={notify} />}
           {view === 'integrations' && <Integrations notify={notify} />}
           {view === 'accounts' && <Settings accounts={accounts} settings={settings} reload={reload} notify={notify} />}
-          {view === 'settings' && <AdminSettings notify={notify} />}
+          {view === 'admin' && <AdminSettings notify={notify} />}
+          {view === 'settings' && (
+            <Placeholder
+              eyebrow="Universal"
+              title="Settings"
+              icon="settings"
+              lines={[
+                'Shared settings that apply across Business-JK and Business-SK.',
+                'Useful universal options will live here — added later.',
+              ]}
+            />
+          )}
           {view === 'studio' && <Studio accounts={accounts} settings={settings} notify={notify} />}
           {view === 'history' && <History />}
+          {/* Business-SK stays MOUNTED (hidden when inactive) so an in-progress generation /
+              queued batch persists as you switch panels and come back. */}
+          <div style={{ display: ['sk-affiliate', 'sk-post', 'sk-storefront', 'sk-history'].includes(view) ? 'block' : 'none' }}>
+            <BusinessSK notify={notify} accounts={accounts} view={view} onNavigate={setView} />
+          </div>
+          {view === 'sk-engagement' && <Engagement notify={notify} />}
         </div>
       </main>
 

@@ -595,6 +595,34 @@ def list_all_campaigns(limit: int = 500) -> List[Dict[str, Any]]:
         return [dict(r) for r in cur.fetchall()]
 
 
+def list_published_posts(limit: int = 200) -> List[Dict[str, Any]]:
+    """Published campaigns ('Post #N') with the Instagram media id + permalink they
+    published to — the anchor for pulling per-post comments & insights."""
+    with connect() as conn:
+        cur = conn.cursor()
+        cur.execute("""SELECT id, property_id, goal, angle, contract, caption, images
+                       FROM business_campaigns WHERE status = 'PUBLISHED'
+                       ORDER BY id DESC LIMIT ?""", (limit,))
+        out: List[Dict[str, Any]] = []
+        for r in cur.fetchall():
+            d = dict(r)
+            pub = (d.get("contract") or {}).get("published") or {}
+            imgs = d.get("images") or {}
+            cover = None
+            if isinstance(imgs, dict):
+                cover = (imgs.get("cover") or (imgs.get("slides") or [None])[0])
+            elif isinstance(imgs, list) and imgs:
+                cover = imgs[0]
+            out.append({
+                "campaign_id": d["id"], "label": f"Post #{d['id']}",
+                "property_id": d.get("property_id"), "goal": d.get("goal"), "angle": d.get("angle"),
+                "ig_media_id": pub.get("ig_media_id"), "permalink": pub.get("permalink"),
+                "account_id": pub.get("account_id"), "account_label": pub.get("account_label"),
+                "posts": pub.get("posts") or [], "cover": cover,
+            })
+        return out
+
+
 def duplicate_campaign(campaign_id: int) -> Optional[int]:
     src = get_campaign(campaign_id)
     if not src:
